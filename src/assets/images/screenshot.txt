@@ -1,0 +1,3 @@
+// This is a placeholder for the screenshot.png file
+// Once the UI is deployed, take a screenshot of the application and replace this file with an actual image.
+// The screenshot should be saved as 'screenshot.png' in the root directory to be properly linked in the README. 
