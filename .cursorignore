@@ -1,0 +1,7 @@
+# Directories to ignore in Cursor operations
+node_modules/
+.git/
+dist/
+build/
+coverage/
+.vscode/ 

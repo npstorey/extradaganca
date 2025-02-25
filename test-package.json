@@ -1,0 +1,13 @@
+{
+  "name": "vibe-generator-tests",
+  "version": "1.0.0",
+  "description": "Test scripts for Vibe Generator API",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "scripts": {
+    "test-api": "node test-ui-integration.js"
+  }
+} 

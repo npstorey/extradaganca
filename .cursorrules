@@ -1,0 +1,42 @@
+# Cursor Rules for Extradaganca Project
+
+# Component-specific rules
+component_conventions = [
+    "All UI components should be placed in src/components/ui/",
+    "All step components should be placed in src/components/steps/",
+    "Use functional components with TypeScript interfaces for props",
+    "Export components as named exports",
+    "Follow existing naming conventions (PascalCase for components)",
+]
+
+# Style conventions
+style_conventions = [
+    "Use styled-components for component styling",
+    "Follow the existing retro-futuristic aesthetic",
+    "Import color variables from the theme in styles directory",
+    "Use responsive design with rem units where possible",
+]
+
+# TypeScript conventions
+typescript_conventions = [
+    "Create interfaces/types in separate files when reused across components",
+    "Use type annotations for all function parameters and return values",
+    "Use optional chaining and nullish coalescing operators for safe access",
+    "Define prop types as interfaces with 'Props' suffix",
+]
+
+# File organization
+file_organization = [
+    "Keep component files focused on a single responsibility",
+    "Extract complex logic to custom hooks in the hooks directory",
+    "Use context for global state management",
+    "Group related constants and utilities in appropriate files",
+]
+
+# Auto-suggestions
+auto_suggestions = [
+    "Import styled-components when creating new styled components",
+    "Import React when creating new component files",
+    "Use existing UI components rather than creating new ones",
+    "Add appropriate JSDoc comments for functions and components",
+] 

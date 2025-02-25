@@ -1,0 +1,39 @@
+{
+  "projectType": "react-typescript",
+  "preferredLanguageServer": "typescript",
+  "formatOnSave": true,
+  "experimentalAutoInform": true,
+  "editorSettings": {
+    "tabSize": 2,
+    "insertSpaces": true,
+    "defaultFormatter": "prettier",
+    "formatOnSave": true,
+    "formatOnPaste": true,
+    "wordWrap": "off"
+  },
+  "codeTemplates": {
+    "component": {
+      "title": "React Component",
+      "pattern": "**/*.tsx",
+      "prefix": "comp",
+      "template": "import React from 'react';\nimport styled from 'styled-components';\n\ninterface ${1:Component}Props {\n  ${2:// props}\n}\n\nconst ${1:Component}: React.FC<${1:Component}Props> = (${3:props}) => {\n  return (\n    <Container>\n      ${4:// content}\n    </Container>\n  );\n};\n\nconst Container = styled.div`\n  ${5:// styles}\n`;\n\nexport default ${1:Component};"
+    },
+    "hook": {
+      "title": "Custom React Hook",
+      "pattern": "**/hooks/*.ts",
+      "prefix": "hook",
+      "template": "import { useState, useEffect } from 'react';\n\nconst use${1:Hook} = (${2:params}) => {\n  ${3:// hook implementation}\n\n  return ${4:// return value};\n};\n\nexport default use${1:Hook};"
+    },
+    "context": {
+      "title": "React Context",
+      "pattern": "**/context/*.tsx",
+      "prefix": "context",
+      "template": "import React, { createContext, useContext, useState } from 'react';\n\ninterface ${1:Context}State {\n  ${2:// state properties}\n}\n\ninterface ${1:Context}ContextType {\n  ${3:// context properties}\n}\n\nconst ${1:Context}Context = createContext<${1:Context}ContextType | undefined>(undefined);\n\nexport const use${1:Context} = () => {\n  const context = useContext(${1:Context}Context);\n  if (context === undefined) {\n    throw new Error('use${1:Context} must be used within a ${1:Context}Provider');\n  }\n  return context;\n};\n\nexport const ${1:Context}Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {\n  ${4:// provider implementation}\n\n  return (\n    <${1:Context}Context.Provider value={{ ${5:// context value} }}>\n      {children}\n    </${1:Context}Context.Provider>\n  );\n};"
+    }
+  },
+  "assistantSettings": {
+    "responseLength": "medium",
+    "useProjectContext": true,
+    "includeRelevantHistory": true
+  }
+} 

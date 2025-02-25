@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { VibeProvider, useVibe } from './context/VibeContext';
 import { SoundProvider, useSound } from './context/SoundContext';
+import { ApiProvider } from './context/ApiContext';
 import GlobalStyles from './styles/GlobalStyles';
 import LocationStep from './components/steps/LocationStep';
 import TimePeriodStep from './components/steps/TimePeriodStep';
 import RealityStep from './components/steps/RealityStep';
 import VibeDescriptionStep from './components/steps/VibeDescriptionStep';
 import ConvergeDivergeStep from './components/steps/ConvergeDivergeStep';
+import VibeQuestionnaireStep from './components/steps/VibeQuestionnaireStep';
+import VibeResultsScreen from './components/steps/VibeResultsScreen';
 import CompletionScreen from './components/steps/CompletionScreen';
+import { useSoundEffects } from './hooks/useSoundEffects';
 
 const AppContainer = styled.div`
   width: 100%;
@@ -99,7 +103,7 @@ const AppContent: React.FC = () => {
   // Play transition sound when changing steps
   useEffect(() => {
     console.log(`Step changed to: ${vibeState.currentStep}`);
-    soundEffects.play('transition');
+    soundEffects.playTransitionSound();
     
     // Start ambient sound when component mounts
     const ambientId = soundEffects.play('ambient', { loop: true });
@@ -126,22 +130,26 @@ const AppContent: React.FC = () => {
       case 3:
         return <VibeDescriptionStep />;
       case 4:
-        return <ConvergeDivergeStep />;
+        return <VibeQuestionnaireStep />;
       case 5:
+        return <VibeResultsScreen />;
+      case 6:
         return <CompletionScreen />;
       default:
         return <LocationStep />;
     }
   };
   
+  // Toggle sound on/off
   const toggleSound = () => {
-    console.log('Toggle sound button clicked');
     soundEffects.toggleEnabled();
+    console.log('Sound toggled:', soundEffects.enabled ? 'ON' : 'OFF');
     soundEffects.play('toggle');
   };
-  
+
+  // Test playing a sound effect
   const testSound = () => {
-    console.log('Test sound button clicked');
+    console.log('Playing test sound sequence');
     soundEffects.play('click');
     setTimeout(() => soundEffects.play('hover'), 300);
     setTimeout(() => soundEffects.play('success'), 600);
@@ -180,14 +188,18 @@ const AppContent: React.FC = () => {
 // Main App wrapper with global providers
 const App: React.FC = () => {
   return (
-    <VibeProvider>
-      <SoundProvider>
-        <GlobalStyles />
-        <AppContainer>
-          <AppContent />
-        </AppContainer>
-      </SoundProvider>
-    </VibeProvider>
+    <>
+      <GlobalStyles />
+      <AppContainer>
+        <VibeProvider>
+          <SoundProvider>
+            <ApiProvider>
+              <AppContent />
+            </ApiProvider>
+          </SoundProvider>
+        </VibeProvider>
+      </AppContainer>
+    </>
   );
 };
 

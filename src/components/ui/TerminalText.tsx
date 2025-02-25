@@ -1,140 +1,149 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled, { keyframes } from 'styled-components';
+import React, { useEffect, useState, ReactNode } from 'react';
+import styled, { keyframes, css } from 'styled-components';
 import { colors, fonts } from '../../styles/theme';
 
+// Define the props interface
 interface TerminalTextProps {
-  text: string;
-  typingSpeed?: number; // ms per character
-  startDelay?: number; // ms delay before typing starts
-  showCursor?: boolean;
-  textColor?: string;
+  children: ReactNode;
+  typing?: boolean;
+  delay?: number;
+  speed?: number;
+  blinking?: boolean;
+  glitch?: boolean;
+  color?: string;
   fontSize?: string;
-  onComplete?: () => void;
-  glitchFrequency?: number; // 0-1, chance of glitch per character
+  maxWidth?: string;
+  as?: React.ElementType;
   className?: string;
-  initiallyVisible?: boolean;
 }
 
-// Blinking cursor animation
+// Keyframes for the blinking cursor
 const blink = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
 `;
 
-const TextContainer = styled.div<{ fontSize: string }>`
+// Keyframes for glitch effect
+const glitch = keyframes`
+  0% {
+    transform: translate(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-2px, 1px);
+    opacity: 0.9;
+  }
+  40% {
+    transform: translate(2px, -1px);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-1px, -1px);
+    opacity: 0.9;
+  }
+  80% {
+    transform: translate(1px, 1px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0);
+    opacity: 1;
+  }
+`;
+
+// Styled component for the text container
+const TextContainer = styled.div<{
+  $color: string;
+  $fontSize: string;
+  $maxWidth?: string;
+  $withCursor: boolean;
+  $blinking: boolean;
+  $glitch: boolean;
+}>`
+  color: ${props => props.$color};
   font-family: ${fonts.terminal};
-  font-size: ${props => props.fontSize};
+  font-size: ${props => props.$fontSize};
   line-height: 1.5;
   position: relative;
-  display: inline-block;
-`;
-
-const GlitchChar = styled.span<{ isGlitched: boolean; textColor: string }>`
-  color: ${props => props.isGlitched ? colors.neonPink : props.textColor};
-  text-shadow: ${props => props.isGlitched ? `0 0 2px ${colors.neonPink}, 0 0 4px ${colors.neonPink}` : 'none'};
-`;
-
-const Cursor = styled.span<{ textColor: string }>`
-  display: inline-block;
-  width: 10px;
-  height: 1.2em;
-  background-color: ${props => props.textColor};
-  animation: ${blink} 1s step-end infinite;
-  margin-left: 2px;
-  vertical-align: middle;
-`;
-
-const TerminalText: React.FC<TerminalTextProps> = ({
-  text,
-  typingSpeed = 40,
-  startDelay = 0,
-  showCursor = true,
-  textColor = colors.terminalGreen,
-  fontSize = '1rem',
-  onComplete,
-  glitchFrequency = 0.03,
-  className,
-  initiallyVisible = false
-}) => {
-  const [visibleText, setVisibleText] = useState(initiallyVisible ? text : '');
-  const [isTyping, setIsTyping] = useState(!initiallyVisible);
-  const [glitchedChars, setGlitchedChars] = useState<number[]>([]);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  ${props => props.$maxWidth && `max-width: ${props.$maxWidth};`}
   
-  // Effect for typing animation
+  ${props => props.$glitch && css`
+    animation: ${glitch} 1.5s infinite alternate-reverse;
+  `}
+  
+  ${props => props.$withCursor && css`
+    &::after {
+      content: '█';
+      position: ${props.$blinking ? 'absolute' : 'static'};
+      margin-left: 2px;
+      animation: ${props.$blinking ? css`${blink} 1s infinite` : 'none'};
+    }
+  `}
+`;
+
+// The TerminalText component
+const TerminalText: React.FC<TerminalTextProps> = ({
+  children,
+  typing = false,
+  delay = 0,
+  speed = 30,
+  blinking = false,
+  glitch = false,
+  color = colors.terminalGreen,
+  fontSize = '1rem',
+  maxWidth,
+  as = 'div',
+  className,
+}) => {
+  const [displayText, setDisplayText] = useState<string>('');
+  const [showCursor, setShowCursor] = useState<boolean>(typing || blinking);
+  const [isTyping, setIsTyping] = useState<boolean>(typing);
+  const fullText = children?.toString() || '';
+  
   useEffect(() => {
-    if (initiallyVisible) {
-      setVisibleText(text);
-      setIsTyping(false);
-      onComplete?.();
+    if (!typing) {
+      setDisplayText(fullText);
       return;
     }
     
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    setVisibleText('');
+    setDisplayText('');
     setIsTyping(true);
     
-    const startTyping = () => {
+    const typingTimer = setTimeout(() => {
       let currentIndex = 0;
       
-      const typeNextChar = () => {
-        if (currentIndex < text.length) {
-          setVisibleText(text.substring(0, currentIndex + 1));
+      const typeInterval = setInterval(() => {
+        if (currentIndex < fullText.length) {
+          setDisplayText(prev => prev + fullText.charAt(currentIndex));
           currentIndex++;
-          timeoutRef.current = setTimeout(typeNextChar, typingSpeed);
         } else {
+          clearInterval(typeInterval);
           setIsTyping(false);
-          if (onComplete) onComplete();
         }
-      };
+      }, speed);
       
-      timeoutRef.current = setTimeout(typeNextChar, 0);
-    };
+      return () => clearInterval(typeInterval);
+    }, delay);
     
-    timeoutRef.current = setTimeout(startTyping, startDelay);
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [text, typingSpeed, startDelay, onComplete, initiallyVisible]);
-  
-  // Effect for random character glitching
-  useEffect(() => {
-    if (!visibleText || visibleText.length === 0) return;
-    
-    const glitchInterval = setInterval(() => {
-      const newGlitchedChars: number[] = [];
-      
-      // For each character, there's a small chance it will glitch
-      for (let i = 0; i < visibleText.length; i++) {
-        if (Math.random() < glitchFrequency) {
-          newGlitchedChars.push(i);
-        }
-      }
-      
-      setGlitchedChars(newGlitchedChars);
-    }, 120);
-    
-    return () => clearInterval(glitchInterval);
-  }, [visibleText, glitchFrequency]);
+    return () => clearTimeout(typingTimer);
+  }, [fullText, typing, delay, speed]);
   
   return (
-    <TextContainer fontSize={fontSize} className={className}>
-      {visibleText.split('').map((char, index) => (
-        <GlitchChar 
-          key={index} 
-          isGlitched={glitchedChars.includes(index)}
-          textColor={textColor}
-        >
-          {char}
-        </GlitchChar>
-      ))}
-      {showCursor && isTyping && <Cursor textColor={textColor} />}
+    <TextContainer
+      as={as}
+      $color={color}
+      $fontSize={fontSize}
+      $maxWidth={maxWidth}
+      $withCursor={showCursor && (isTyping || blinking)}
+      $blinking={blinking}
+      $glitch={glitch}
+      className={className}
+    >
+      {typing ? displayText : children}
     </TextContainer>
   );
 };

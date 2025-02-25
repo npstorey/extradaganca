@@ -1,339 +1,183 @@
-import React, { useState, useEffect, forwardRef } from 'react';
-import styled, { css, keyframes } from 'styled-components';
-import { colors, fonts, duration } from '../../styles/theme';
+import React, { ButtonHTMLAttributes, forwardRef } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { colors, fonts } from '../../styles/theme';
 
-export interface RetroButtonProps {
-  children: React.ReactNode;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onHover?: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success';
-  size?: 'small' | 'medium' | 'large';
-  fullWidth?: boolean;
-  glitchOnHover?: boolean;
-  disabled?: boolean;
-  className?: string;
-  type?: 'button' | 'submit' | 'reset';
-  unstable?: boolean; // Adds subtle random movement
+interface RetroButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  primary?: boolean;
+  small?: boolean;
+  danger?: boolean;
+  outline?: boolean;
+  glowing?: boolean;
 }
 
-// Button hover glow animation
-const buttonGlow = keyframes`
-  0%, 100% { box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
-  50% { box-shadow: 0 0 10px currentColor, 0 0 15px currentColor; }
-`;
-
-// Random jitter animation for unstable buttons
-const jitter = keyframes`
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  10% {
-    transform: translate(-1px, 1px);
-  }
-  20% {
-    transform: translate(1px, -1px);
-  }
-  30% {
-    transform: translate(-2px, 2px);
-  }
-  40% {
-    transform: translate(2px, -2px);
+const pulse = keyframes`
+  0% {
+    box-shadow: 0 0 5px rgba(51, 255, 51, 0.5), 0 0 10px rgba(51, 255, 51, 0.3);
   }
   50% {
-    transform: translate(-1px, 1px);
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.8), 0 0 15px rgba(51, 255, 51, 0.5);
   }
-  60% {
-    transform: translate(1px, -1px);
-  }
-  70% {
-    transform: translate(-2px, 2px);
-  }
-  80% {
-    transform: translate(2px, -1px);
-  }
-  90% {
-    transform: translate(-1px, 1px);
+  100% {
+    box-shadow: 0 0 5px rgba(51, 255, 51, 0.5), 0 0 10px rgba(51, 255, 51, 0.3);
   }
 `;
-
-// Glitch effect
-const glitch = keyframes`
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-`;
-
-// Get color based on variant
-const getButtonColor = (variant: 'primary' | 'secondary' | 'danger' | 'success') => {
-  switch (variant) {
-    case 'primary':
-      return colors.neonBlue;
-    case 'secondary':
-      return colors.neonPink;
-    case 'danger':
-      return colors.neonRed;
-    case 'success':
-      return colors.neonGreen;
-    default:
-      return colors.neonBlue;
-  }
-};
-
-const getButtonSize = (size: 'small' | 'medium' | 'large') => {
-  switch (size) {
-    case 'small':
-      return css`
-        padding: 0.3rem 0.6rem;
-        font-size: 0.8rem;
-      `;
-    case 'medium':
-      return css`
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-      `;
-    case 'large':
-      return css`
-        padding: 0.7rem 1.4rem;
-        font-size: 1.2rem;
-      `;
-    default:
-      return css`
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-      `;
-  }
-};
 
 const StyledButton = styled.button<{
-  $variant: 'primary' | 'secondary' | 'danger' | 'success';
-  $size: 'small' | 'medium' | 'large';
-  $fullWidth: boolean;
-  $isHovered: boolean;
-  $isGlitching: boolean;
-  $unstable: boolean;
+  $primary?: boolean;
+  $small?: boolean;
+  $danger?: boolean;
+  $outline?: boolean;
+  $glowing?: boolean;
 }>`
-  position: relative;
-  background-color: ${colors.darkGray};
-  color: ${props => getButtonColor(props.$variant)};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: ${fonts.terminal};
-  border: 2px solid ${props => getButtonColor(props.$variant)};
-  ${props => getButtonSize(props.$size)}
+  font-size: ${props => props.$small ? '0.85rem' : '1rem'};
   text-transform: uppercase;
   letter-spacing: 1px;
+  padding: ${props => props.$small ? '0.5rem 1rem' : '0.75rem 1.5rem'};
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all ${duration.medium} ease;
-  outline: none;
-  width: ${props => props.$fullWidth ? '100%' : 'auto'};
-  animation: ${props => props.$unstable ? css`${jitter} 10s infinite` : 'none'};
+  position: relative;
   overflow: hidden;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      45deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.1) 45%,
-      rgba(255, 255, 255, 0.2) 50%,
-      rgba(255, 255, 255, 0.1) 55%,
-      transparent 100%
-    );
-    transform: translateX(-100%);
-    transition: transform 0.6s;
-    z-index: 1;
-    pointer-events: none;
-  }
-  
-  &:hover:not(:disabled) {
-    background-color: ${props => props.$isHovered ? 'rgba(0, 0, 0, 0.7)' : getButtonColor(props.$variant)};
-    color: ${props => props.$isHovered ? getButtonColor(props.$variant) : colors.black};
-    box-shadow: 0 0 10px ${props => getButtonColor(props.$variant)};
-    animation: ${buttonGlow} 2s infinite;
-    text-shadow: 0 0 5px ${props => getButtonColor(props.$variant)};
-    
-    &::before {
-      transform: translateX(100%);
+  /* Color variations */
+  ${props => {
+    if (props.$danger) {
+      if (props.$outline) {
+        return css`
+          color: ${colors.neonRed};
+          border-color: ${colors.neonRed};
+          background: transparent;
+          
+          &:hover, &:focus {
+            background: rgba(255, 0, 0, 0.1);
+          }
+        `;
+      }
+      return css`
+        color: ${colors.black};
+        border-color: ${colors.neonRed};
+        background: ${colors.neonRed};
+        
+        &:hover, &:focus {
+          background: #ff4444;
+        }
+      `;
     }
-  }
+    
+    if (props.$primary) {
+      if (props.$outline) {
+        return css`
+          color: ${colors.neonGreen};
+          border-color: ${colors.neonGreen};
+          background: transparent;
+          
+          &:hover, &:focus {
+            background: rgba(51, 255, 51, 0.1);
+          }
+        `;
+      }
+      return css`
+        color: ${colors.black};
+        border-color: ${colors.neonGreen};
+        background: ${colors.neonGreen};
+        
+        &:hover, &:focus {
+          background: #5aff5a;
+        }
+      `;
+    }
+    
+    // Default styles
+    if (props.$outline) {
+      return css`
+        color: ${colors.neonBlue};
+        border-color: ${colors.neonBlue};
+        background: transparent;
+        
+        &:hover, &:focus {
+          background: rgba(51, 153, 255, 0.1);
+        }
+      `;
+    }
+    return css`
+      color: ${colors.black};
+      border-color: ${colors.neonBlue};
+      background: ${colors.neonBlue};
+      
+      &:hover, &:focus {
+        background: #5a9dff;
+      }
+    `;
+  }}
   
-  &:active:not(:disabled) {
+  /* Glow effect */
+  ${props => props.$glowing && css`
+    animation: ${pulse} 2s infinite;
+  `}
+  
+  /* Active state */
+  &:active {
     transform: translateY(2px);
+    filter: brightness(0.9);
   }
   
-  &:focus {
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.3), 0 0 0 6px ${props => getButtonColor(props.$variant)};
-  }
-  
+  /* Disabled state */
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    border-color: ${colors.lightGray};
-    color: ${colors.lightGray};
-  }
-`;
-
-// Create glitch overlays
-const GlitchOverlay = styled.span<{ $buttonColor: string }>`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  animation: ${glitch} 0.3s infinite;
-  
-  &:nth-child(1) {
-    color: ${colors.neonRed};
-    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
-    transform: translate(-2px);
+    transform: none;
+    filter: grayscale(50%);
   }
   
-  &:nth-child(2) {
-    color: ${colors.neonBlue};
-    clip-path: polygon(0 33%, 100% 33%, 100% 66%, 0 66%);
-  }
-  
-  &:nth-child(3) {
-    color: ${colors.neonGreen};
-    clip-path: polygon(0 66%, 100% 66%, 100% 100%, 0 100%);
-    transform: translate(2px);
-  }
-`;
-
-const ButtonContent = styled.span`
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const glitchAnim = keyframes`
-  0% {
-    clip-path: polygon(0 0, 100% 0, 100% 2%, 0 2%);
-    transform: translate(0);
-  }
-  20% {
-    clip-path: polygon(0 15%, 100% 15%, 100% 25%, 0 25%);
-    transform: translate(-4px, 0);
-  }
-  40% {
-    clip-path: polygon(0 45%, 100% 45%, 100% 65%, 0 65%);
-    transform: translate(4px, 0);
-  }
-  60% {
-    clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
-    transform: translate(-3px, 0);
-  }
-  80% {
-    clip-path: polygon(0 75%, 100% 75%, 100% 90%, 0 90%);
-    transform: translate(2px, 0);
-  }
-  100% {
-    clip-path: polygon(0 85%, 100% 85%, 100% 100%, 0 100%);
-    transform: translate(0);
-  }
-`;
-
-const GlitchText = styled.span`
-  position: relative;
-  display: inline-block;
-
-  &::before,
-  &::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-
+  /* Additional effects */
   &::before {
-    color: cyan;
-    animation: ${glitchAnim} 0.3s infinite linear alternate-reverse;
-    z-index: -1;
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(45deg);
+    transition: all 0.3s ease;
+    opacity: 0;
   }
-
-  &::after {
-    color: magenta;
-    animation: ${glitchAnim} 0.3s infinite linear alternate;
-    z-index: -2;
+  
+  &:hover::before, &:focus::before {
+    opacity: 1;
   }
 `;
 
-const RetroButton = forwardRef<HTMLButtonElement, RetroButtonProps>((props, ref) => {
-  const { 
-    variant = 'primary', 
-    size = 'medium', 
-    fullWidth = false, 
-    children, 
-    onClick, 
-    unstable = false,
-    onHover,
-    ...rest 
-  } = props;
-  
-  const [isHovered, setIsHovered] = useState(false);
-  const [isGlitching, setIsGlitching] = useState(false);
-  
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (unstable && Math.random() > 0.7) {
-      setIsGlitching(true);
-      setTimeout(() => setIsGlitching(false), 500);
-    }
-    
-    if (onClick) {
-      onClick(e);
-    }
-  };
-  
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (onHover) {
-      onHover();
-    }
-  };
-  
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-  
-  return (
-    <StyledButton
-      ref={ref}
-      $variant={variant}
-      $size={size}
-      $fullWidth={fullWidth}
-      $isHovered={isHovered}
-      $isGlitching={isGlitching}
-      $unstable={unstable}
-      onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      {...rest}
-    >
-      {isGlitching ? (
-        <GlitchText data-text={children}>{children}</GlitchText>
-      ) : (
-        children
-      )}
-    </StyledButton>
-  );
-});
+const RetroButton = forwardRef<HTMLButtonElement, RetroButtonProps>(
+  ({ primary, small, danger, outline, glowing, children, ...props }, ref) => {
+    return (
+      <StyledButton
+        $primary={primary}
+        $small={small}
+        $danger={danger}
+        $outline={outline}
+        $glowing={glowing}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </StyledButton>
+    );
+  }
+);
 
-// Add display name for debugging
 RetroButton.displayName = 'RetroButton';
 
 export default RetroButton; 
