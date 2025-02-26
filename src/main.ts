@@ -13,7 +13,7 @@ import { generateVibeSummary, generateImagePrompts, generateSongRecommendations 
 import { generateImages, enhancePrompt } from './services/imageService';
 import { compileVibe, formatVibeResponse, generateVibeHtml } from './services/artifactService';
 import { generateRequestId } from './utils/apiHelpers';
-import { UserInput } from './types/vibeTypes';
+import { UserInput, VibeImage } from './types/vibeTypes';
 
 // Create fastify instance
 const fastify = Fastify({
@@ -28,10 +28,12 @@ const fastify = Fastify({
 
 // Register CORS to allow frontend access
 fastify.register(fastifyCors, {
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 });
 
 // Register JSON body parser with appropriate limits
@@ -82,24 +84,67 @@ fastify.post('/generate-vibe', async (request, reply) => {
     
     // Step 1: Generate vibe summary
     console.log('Generating vibe summary...');
-    const vibeSummary = await generateVibeSummary(userInput);
-    console.log(`Generated vibe summary: "${vibeSummary.title}"`);
+    let vibeSummary;
+    try {
+      vibeSummary = await generateVibeSummary(userInput);
+      console.log(`Generated vibe summary: "${vibeSummary.title}"`);
+    } catch (error) {
+      console.error('Error in vibe summary generation:', error);
+      return reply.status(500).send({
+        error: {
+          code: 'SUMMARY_GENERATION_FAILED',
+          message: error instanceof Error ? error.message : 'Failed to generate vibe summary',
+        }
+      });
+    }
     
     // Step 2: Generate image prompts
     console.log('Generating image prompts...');
-    const imagePrompts = await generateImagePrompts(vibeSummary);
+    let imagePrompts;
+    try {
+      imagePrompts = await generateImagePrompts(vibeSummary);
+    } catch (error) {
+      console.error('Error in image prompt generation:', error);
+      // Try to continue with fallback prompts
+      imagePrompts = [
+        `${vibeSummary.title}: A detailed artistic scene representing the essence of ${vibeSummary.description.substring(0, 100)}`,
+        `${vibeSummary.title}: An atmospheric visualization of ${vibeSummary.description.substring(0, 100)}`,
+        `${vibeSummary.title}: A vibrant illustration of ${vibeSummary.description.substring(0, 100)}`,
+        `${vibeSummary.title}: A cinematic moment capturing ${vibeSummary.description.substring(0, 100)}`,
+        `${vibeSummary.title}: An abstract representation of ${vibeSummary.description.substring(0, 100)}`
+      ];
+    }
     
     // Step 3: Generate images from prompts
     console.log('Generating images...');
-    // Enhance each prompt for better results
-    const enhancedPrompts = imagePrompts.map(enhancePrompt);
-    const images = await generateImages(enhancedPrompts.slice(0, 5)); // Limit to 5 images
-    console.log(`Generated ${images.length} images`);
+    let images: VibeImage[] = [];
+    try {
+      // Enhance each prompt for better results
+      const enhancedPrompts = imagePrompts.map(enhancePrompt);
+      images = await generateImages(enhancedPrompts.slice(0, 5)); // Limit to 5 images
+      console.log(`Generated ${images.length} images`);
+    } catch (error) {
+      console.error('Error in image generation:', error);
+      // Continue with empty images - the UI will handle showing placeholders
+    }
     
     // Step 4: Generate song recommendations
     console.log('Generating song recommendations...');
-    const songRecommendations = await generateSongRecommendations(vibeSummary);
-    console.log(`Generated ${songRecommendations.length} song recommendations`);
+    let songRecommendations = [];
+    try {
+      songRecommendations = await generateSongRecommendations(vibeSummary);
+      console.log(`Generated ${songRecommendations.length} song recommendations`);
+    } catch (error) {
+      console.error('Error in song recommendation generation:', error);
+      // Use fallback generic recommendations
+      songRecommendations = [
+        { artist: "Lo-Fi Beats", title: "Chill Session" },
+        { artist: "Ambient Collection", title: "Focus Flow" },
+        { artist: "Instrumental Moods", title: "Deep Thoughts" },
+        { artist: "Piano Vibes", title: "Reflection" },
+        { artist: "Electronic Ambience", title: "Digital Dreams" }
+      ];
+    }
     
     // Step 5: Compile everything into a single vibe
     const vibe = compileVibe(vibeSummary, images, songRecommendations);
@@ -115,6 +160,7 @@ fastify.post('/generate-vibe', async (request, reply) => {
       error: {
         code: 'GENERATION_FAILED',
         message: error instanceof Error ? error.message : 'An unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined
       }
     });
   }

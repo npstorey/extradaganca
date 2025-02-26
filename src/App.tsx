@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { BrowserRouter } from 'react-router-dom';
 import { VibeProvider, useVibe } from './context/VibeContext';
 import { SoundProvider, useSound } from './context/SoundContext';
 import { ApiProvider } from './context/ApiContext';
+import { ThemeProvider } from './context/ThemeContext';
 import GlobalStyles from './styles/GlobalStyles';
 import LocationStep from './components/steps/LocationStep';
 import TimePeriodStep from './components/steps/TimePeriodStep';
@@ -100,20 +102,37 @@ const AppContent: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  // Play transition sound when changing steps
+  // Play transition sound when changing steps, but with error handling
   useEffect(() => {
     console.log(`Step changed to: ${vibeState.currentStep}`);
-    soundEffects.playTransitionSound();
     
-    // Start ambient sound when component mounts
-    const ambientId = soundEffects.play('ambient', { loop: true });
-    console.log('Ambient sound started');
+    // Try to play transition sound, but don't fail if it doesn't work
+    try {
+      soundEffects.playTransitionSound();
+    } catch (error) {
+      console.warn('Could not play transition sound:', error);
+    }
+    
+    // Start ambient sound when component mounts, with error handling
+    let ambientId = null;
+    try {
+      if (soundEffects.enabled && soundEffects.soundsLoaded) {
+        ambientId = soundEffects.play('ambient', { loop: true });
+        console.log('Ambient sound started');
+      }
+    } catch (error) {
+      console.warn('Could not play ambient sound:', error);
+    }
     
     return () => {
       // Clean up ambient sound when component unmounts
       if (ambientId) {
-        soundEffects.stop('ambient');
-        console.log('Ambient sound stopped');
+        try {
+          soundEffects.stop('ambient');
+          console.log('Ambient sound stopped');
+        } catch (error) {
+          console.warn('Error stopping ambient sound:', error);
+        }
       }
     };
   }, [vibeState.currentStep, soundEffects]);
@@ -142,18 +161,36 @@ const AppContent: React.FC = () => {
   
   // Toggle sound on/off
   const toggleSound = () => {
-    soundEffects.toggleEnabled();
-    console.log('Sound toggled:', soundEffects.enabled ? 'ON' : 'OFF');
-    soundEffects.play('toggle');
+    try {
+      soundEffects.toggleEnabled();
+      console.log('Sound toggled:', soundEffects.enabled ? 'ON' : 'OFF');
+      soundEffects.play('toggle');
+    } catch (error) {
+      console.warn('Error toggling sound:', error);
+    }
   };
 
   // Test playing a sound effect
   const testSound = () => {
-    console.log('Playing test sound sequence');
-    soundEffects.play('click');
-    setTimeout(() => soundEffects.play('hover'), 300);
-    setTimeout(() => soundEffects.play('success'), 600);
-    setTimeout(() => soundEffects.play('error'), 900);
+    try {
+      console.log('Playing test sound sequence');
+      soundEffects.play('click');
+      
+      // Use setTimeout to space out the sounds and catch individual errors
+      setTimeout(() => {
+        try { soundEffects.play('hover'); } catch (e) { console.warn('Error playing hover sound:', e); }
+      }, 300);
+      
+      setTimeout(() => {
+        try { soundEffects.play('success'); } catch (e) { console.warn('Error playing success sound:', e); }
+      }, 600);
+      
+      setTimeout(() => {
+        try { soundEffects.play('error'); } catch (e) { console.warn('Error playing error sound:', e); }
+      }, 900);
+    } catch (error) {
+      console.warn('Error playing test sounds:', error);
+    }
   };
   
   return (
@@ -191,13 +228,17 @@ const App: React.FC = () => {
     <>
       <GlobalStyles />
       <AppContainer>
-        <VibeProvider>
-          <SoundProvider>
-            <ApiProvider>
-              <AppContent />
-            </ApiProvider>
-          </SoundProvider>
-        </VibeProvider>
+        <BrowserRouter>
+          <ApiProvider>
+            <SoundProvider>
+              <VibeProvider>
+                <ThemeProvider>
+                  <AppContent />
+                </ThemeProvider>
+              </VibeProvider>
+            </SoundProvider>
+          </ApiProvider>
+        </BrowserRouter>
       </AppContainer>
     </>
   );

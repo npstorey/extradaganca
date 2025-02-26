@@ -6,8 +6,8 @@ const SoundContext = createContext<ReturnType<typeof useSoundEffects> | null>(nu
 
 // Provider component that will wrap our app
 export const SoundProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Create a single instance of our sound effects hook
-  const soundEffects = useSoundEffects(true);
+  // Create a single instance of our sound effects hook with sounds disabled by default
+  const soundEffects = useSoundEffects(false);
   
   return (
     <SoundContext.Provider value={soundEffects}>

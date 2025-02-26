@@ -116,14 +116,43 @@ export const generateImagePrompts = async (vibeSummary: VibeSummary): Promise<st
       throw new Error("No content returned from OpenAI API");
     }
 
-    // Parse JSON response
-    const result = JSON.parse(content) as { prompts: string[] };
-    return result.prompts;
+    // Parse JSON response with error handling
+    try {
+      const result = JSON.parse(content) as { prompts: string[] };
+      return result.prompts;
+    } catch (jsonError) {
+      console.error('Error parsing JSON from OpenAI:', jsonError);
+      console.log('Malformed JSON content:', content);
+      
+      // Generate fallback prompts based on the vibe summary
+      console.log('Using fallback image prompts based on the vibe summary');
+      return generateFallbackImagePrompts(vibeSummary);
+    }
   } catch (error) {
     const errorMessage = formatApiError(error instanceof Error ? error : new Error('Unknown error'));
     console.error('Error generating image prompts:', errorMessage);
-    throw new Error(`Failed to generate image prompts: ${errorMessage}`);
+    
+    // Use fallback prompts if API call fails
+    return generateFallbackImagePrompts(vibeSummary);
   }
+};
+
+/**
+ * Generate fallback image prompts when the API fails
+ * @param vibeSummary The vibe summary to base prompts on
+ * @returns An array of simple image prompts
+ */
+const generateFallbackImagePrompts = (vibeSummary: VibeSummary): string[] => {
+  const { title, description } = vibeSummary;
+  
+  // Create 5 basic prompts based on the vibe title and description
+  return [
+    `${title}: A detailed artistic scene representing ${description.substring(0, 100)}`,
+    `${title}: An atmospheric environment showing ${description.substring(0, 100)}`,
+    `${title}: A vibrant composition illustrating ${description.substring(0, 100)}`,
+    `${title}: A close-up detail representing the essence of ${description.substring(0, 100)}`,
+    `${title}: An abstract interpretation of ${description.substring(0, 100)}`
+  ];
 };
 
 /**
@@ -157,12 +186,44 @@ export const generateSongRecommendations = async (vibeSummary: VibeSummary): Pro
       throw new Error("No content returned from OpenAI API");
     }
 
-    // Parse JSON response
-    const result = JSON.parse(content) as { songs: { artist: string, title: string }[] };
-    return result.songs;
+    // Parse JSON response with error handling
+    try {
+      const result = JSON.parse(content) as { songs: { artist: string, title: string }[] };
+      return result.songs;
+    } catch (jsonError) {
+      console.error('Error parsing JSON from OpenAI for songs:', jsonError);
+      console.log('Malformed JSON content:', content);
+      
+      // Generate fallback songs based on the vibe
+      console.log('Using fallback song recommendations');
+      return generateFallbackSongs(vibeSummary);
+    }
   } catch (error) {
     const errorMessage = formatApiError(error instanceof Error ? error : new Error('Unknown error'));
     console.error('Error generating song recommendations:', errorMessage);
-    throw new Error(`Failed to generate song recommendations: ${errorMessage}`);
+    
+    // Use fallback songs if API call fails
+    return generateFallbackSongs(vibeSummary);
   }
+};
+
+/**
+ * Generate fallback song recommendations when the API fails
+ * @param vibeSummary The vibe summary to base song recommendations on
+ * @returns An array of generic song recommendations
+ */
+const generateFallbackSongs = (vibeSummary: VibeSummary): { artist: string, title: string }[] => {
+  // Return a generic list of songs that might fit the vibe
+  return [
+    { artist: "Ambient Music", title: "Serene Atmosphere" },
+    { artist: "Lo-Fi Beats", title: "Chill Session" },
+    { artist: "Instrumental", title: "Deep Focus" },
+    { artist: "Piano Collection", title: "Contemplative Moments" },
+    { artist: "Mood Orchestra", title: "Emotional Journey" },
+    { artist: "Ambient Guitar", title: "Peaceful Reflections" },
+    { artist: "Electronic Mood", title: "Distant Memories" },
+    { artist: "Synth Wave", title: "Retro Dreams" },
+    { artist: "Jazz Ensemble", title: "Smooth Transitions" },
+    { artist: "Classical Contemporary", title: "Modern Expressions" }
+  ];
 }; 

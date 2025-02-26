@@ -2,325 +2,436 @@
  * Vibe Results Screen for displaying the generated vibe
  */
 import React, { useEffect } from 'react';
-import styled from 'styled-components';
-import { colors, fonts } from '../../styles/theme';
-import { useVibe } from '../../context/VibeContext';
-import { useApi } from '../../context/ApiContext';
-import CRTScreen from '../ui/CRTScreen';
-import TerminalText from '../ui/TerminalText';
-import RetroButton from '../ui/RetroButton';
-import { useSound } from '../../context/SoundContext';
+import styled, { keyframes, css } from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { useVibeData } from '../../context/VibeContext';
+import { useTheme } from '../../context/ThemeContext';
+import { extractMood } from '../../services/styleExtractionService';
+import { exportVibeToHTML } from '../../utils/exportHelper';
+import Button from '../../components/ui/Button';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Color from 'color';
 
-const Container = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+// Animation keyframes
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const glitchEffect = keyframes`
+  0% {
+    transform: translate(0);
+    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+  }
+  2% {
+    transform: translate(-2px, 2px);
+    text-shadow: 2px -2px #ff00ff, -2px 2px #00ffff;
+  }
+  4% {
+    transform: translate(2px, -2px);
+    text-shadow: -2px 2px #ff00ff, 2px -2px #00ffff;
+  }
+  6% {
+    transform: translate(0);
+    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+  }
+  100% {
+    transform: translate(0);
+    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+  }
+`;
+
+const pulseGlow = keyframes`
+  0% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+`;
+
+const scanline = keyframes`
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+`;
+
+// Styled components with dynamic theming
+const Container = styled.div<{ $theme?: any }>`
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
+  color: ${props => props.theme.textColor};
+  background-color: ${props => props.theme.backgroundColor};
   position: relative;
-  color: ${colors.terminalGreen};
-  overflow-y: auto;
+  overflow: hidden;
+  min-height: 100vh;
+  animation: ${fadeIn} 1s ease-in;
+  transition: all 0.5s ease;
+  
+  ${props => props.theme.backgroundPattern !== 'none' && css`
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: ${props.theme.backgroundPattern};
+      background-size: 50px 50px;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+  `}
+  
+  ${props => props.theme.overlayEffect !== 'none' && css`
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: ${props.theme.overlayEffect};
+      pointer-events: none;
+      z-index: 1;
+      animation: ${scanline} 8s linear infinite;
+    }
+  `}
 `;
 
-const ResultsContainer = styled.div`
-  width: 100%;
-  max-width: 900px;
-  margin: 1rem 0;
+const ContentWrapper = styled.div`
+  position: relative;
+  z-index: 2;
 `;
 
-const Section = styled.section`
-  margin: 2rem 0;
-  width: 100%;
-  border: 1px solid ${colors.neonGreen};
+const Section = styled.section<{ $mood?: string }>`
+  margin-bottom: 2rem;
   padding: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 4px;
-  box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);
+  border: 2px ${props => props.theme.borderStyle} ${props => props.theme.primaryColor};
+  border-radius: ${props => props.theme.borderRadius};
+  background-color: ${props => Color(props.theme.backgroundColor).lighten(0.1).alpha(0.6).toString()};
+  position: relative;
+  box-shadow: ${props => props.theme.boxShadowStyle};
+  transition: all 0.3s ease;
+  
+  ${props => props.theme.glowEffect !== '0 0 0' && css`
+    &:hover {
+      box-shadow: ${props.theme.glowEffect} ${props.theme.glowIntensity * 2}px ${props.theme.primaryColor};
+    }
+  `}
+
+  ${props => props.$mood === 'futuristic' && css`
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, ${props.theme.accentColor}, transparent);
+      animation: ${pulseGlow} 3s infinite;
+    }
+  `}
+  
+  ${props => props.$mood === 'tech' && css`
+    border-left: 4px solid ${props.theme.accentColor};
+  `}
+  
+  ${props => props.$mood === 'retro' && css`
+    border-image: linear-gradient(45deg, ${props.theme.primaryColor}, ${props.theme.accentColor}) 1;
+  `}
 `;
 
 const SectionTitle = styled.h2`
-  color: ${colors.neonPink};
-  font-family: ${fonts.display};
+  font-family: ${props => props.theme.titleFontFamily};
+  font-size: 1.8rem;
+  color: ${props => props.theme.accentColor};
+  margin-top: 0;
   margin-bottom: 1rem;
-  text-transform: uppercase;
   letter-spacing: 2px;
+  
+  ${props => props.theme.animationSpeed === 'fast' && css`
+    animation: ${glitchEffect} 5s infinite;
+  `}
 `;
 
 const VibeTitle = styled.h1`
-  color: ${colors.neonBlue};
-  font-family: ${fonts.display};
-  font-size: 2.5rem;
+  font-family: ${props => props.theme.titleFontFamily};
+  font-size: 3rem;
+  color: ${props => props.theme.primaryColor};
   text-align: center;
-  margin: 1rem 0;
-  text-transform: uppercase;
+  margin-bottom: 1rem;
   letter-spacing: 3px;
-  text-shadow: 0 0 10px ${colors.neonBlue};
+  text-shadow: ${props => props.theme.textShadow} ${props => props.theme.accentColor};
+  
+  ${props => props.theme.animationSpeed === 'fast' && css`
+    animation: ${glitchEffect} 5s infinite;
+  `}
+`;
+
+const Description = styled.p`
+  font-family: ${props => props.theme.fontFamily};
+  font-size: 1.2rem;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  text-align: center;
 `;
 
 const ImagesGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin: 1.5rem 0;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: ${props => props.theme.layoutStyle === 'grid' ? 'repeat(auto-fill, minmax(250px, 1fr))' : 'repeat(1, 1fr)'};
+  gap: ${props => props.theme.spacing};
+  margin-top: 1.5rem;
 `;
 
 const VibeImage = styled.img`
   width: 100%;
   height: auto;
-  object-fit: cover;
-  border: 2px solid ${colors.neonGreen};
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
-  transition: transform 0.3s ease;
+  border-radius: ${props => props.theme.borderRadius};
+  border: 2px ${props => props.theme.borderStyle} ${props => props.theme.accentColor};
+  box-shadow: ${props => props.theme.boxShadowStyle};
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   
   &:hover {
     transform: scale(1.02);
-    box-shadow: 0 0 15px rgba(51, 255, 51, 0.5);
+    box-shadow: ${props => props.theme.glowEffect} ${props => props.theme.glowIntensity}px ${props => props.theme.accentColor};
   }
 `;
 
-const Description = styled.p`
-  font-family: ${fonts.terminal};
-  line-height: 1.6;
-  margin: 1rem 0;
-  color: ${colors.lightGray};
+const SongsSection = styled(Section)`
+  background-color: ${props => Color(props.theme.backgroundColor).darken(0.1).alpha(0.7).toString()};
 `;
 
 const SongList = styled.ul`
-  list-style-type: none;
+  list-style: none;
   padding: 0;
-  margin: 1rem 0;
 `;
 
 const SongItem = styled.li`
-  padding: 0.75rem;
-  border-bottom: 1px dashed ${colors.neonGreen};
-  font-family: ${fonts.terminal};
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid ${props => Color(props.theme.primaryColor).alpha(0.3).toString()};
+  font-family: ${props => props.theme.fontFamily};
   
   &:last-child {
     border-bottom: none;
   }
   
   &:hover {
-    background-color: rgba(51, 255, 51, 0.1);
+    background-color: ${props => Color(props.theme.backgroundColor).lighten(0.2).alpha(0.5).toString()};
   }
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 2rem;
-  height: 50vh;
-  justify-content: center;
+const SongTitle = styled.span`
+  font-weight: bold;
+  color: ${props => props.theme.primaryColor};
+  margin-right: 0.5rem;
+`;
+
+const SongArtist = styled.span`
+  color: ${props => props.theme.textColor};
+  opacity: 0.8;
 `;
 
 const ErrorMessage = styled.div`
-  color: ${colors.neonRed};
-  font-family: ${fonts.terminal};
-  margin-top: 1rem;
   padding: 1rem;
-  border: 1px solid ${colors.neonRed};
-  border-radius: 4px;
   background-color: rgba(255, 0, 0, 0.1);
-  width: 100%;
-  max-width: 800px;
+  border-left: 4px solid #ff0000;
+  color: #ff0000;
+  margin-bottom: 1rem;
+  border-radius: ${props => props.theme.borderRadius};
+  font-family: ${props => props.theme.fontFamily};
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
+  justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
-  margin-bottom: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  position: relative;
+  z-index: 3;
+`;
 
-  @media (max-width: 600px) {
-    flex-direction: column;
-    align-items: center;
+const ExportButton = styled(Button)`
+  background-color: ${props => props.theme.accentColor};
+  color: ${props => Color(props.theme.backgroundColor).darken(0.5).toString()};
+  
+  &:hover {
+    background-color: ${props => Color(props.theme.accentColor).lighten(0.2).toString()};
+    box-shadow: ${props => props.theme.glowEffect} ${props => props.theme.glowIntensity}px ${props => props.theme.accentColor};
+  }
+`;
+
+const BackButton = styled(Button)`
+  background-color: transparent;
+  border: 2px solid ${props => props.theme.primaryColor};
+  color: ${props => props.theme.primaryColor};
+  
+  &:hover {
+    background-color: ${props => Color(props.theme.primaryColor).alpha(0.2).toString()};
   }
 `;
 
 const VibeResultsScreen: React.FC = () => {
-  const { goToStep } = useVibe();
-  const { loading, error, vibeData } = useApi();
-  const soundEffects = useSound();
+  const { vibeData, loading, error } = useVibeData();
+  const { theme, updateTheme } = useTheme();
+  const navigate = useNavigate();
   
-  // Add debug logs to check what data is being received
   useEffect(() => {
+    // Log for debugging
     console.log('VibeResultsScreen: Component mounted');
-    console.log('VibeResultsScreen: loading:', loading);
-    console.log('VibeResultsScreen: error:', error);
-    console.log('VibeResultsScreen: vibeData:', vibeData);
-  }, [loading, error, vibeData]);
-  
-  // Play a success sound when vibe data is loaded
-  useEffect(() => {
+    console.log('Loading state:', loading);
+    console.log('Error message:', error);
+    console.log('Vibe data:', vibeData);
+    
+    // Update theme based on vibe data when it loads
     if (vibeData && !loading) {
-      console.log('VibeResultsScreen: Playing success sound for received vibe data');
-      soundEffects.play('success');
+      console.log('VibeResultsScreen: Updating theme based on vibe data');
+      const mood = vibeData.mood || extractMoodFromText(vibeData.description || '');
+      const colors = vibeData.colors || extractColorsFromImages(vibeData.imageUrls || []);
+      
+      updateTheme({
+        mood,
+        colors
+      });
     }
-  }, [vibeData, loading, soundEffects]);
+  }, [vibeData, loading, updateTheme]);
   
-  // If we don't have vibe data and we're not loading, redirect back to questionnaire
-  useEffect(() => {
-    if (!loading && !vibeData && !error) {
-      console.log('VibeResultsScreen: No vibe data, redirecting to questionnaire');
-      goToStep(4);
+  // Helper function to extract mood from text
+  const extractMoodFromText = (text: string): string => {
+    const moodKeywords = {
+      energetic: ['energetic', 'dynamic', 'vibrant', 'lively'],
+      calm: ['calm', 'peaceful', 'serene', 'tranquil'],
+      happy: ['happy', 'joyful', 'cheerful', 'playful'],
+      mysterious: ['mysterious', 'enigmatic', 'dark', 'shadowy'],
+      futuristic: ['futuristic', 'tech', 'digital', 'cyber'],
+      retro: ['retro', 'vintage', 'nostalgic', 'classic'],
+      romantic: ['romantic', 'dreamy', 'passionate', 'sensual']
+    };
+    
+    text = text.toLowerCase();
+    
+    for (const [mood, keywords] of Object.entries(moodKeywords)) {
+      if (keywords.some(keyword => text.includes(keyword))) {
+        return mood;
+      }
     }
-  }, [loading, vibeData, error, goToStep]);
-  
-  // Function to handle regenerating a vibe
-  const handleRegenerate = () => {
-    console.log('VibeResultsScreen: Regenerate button clicked');
-    goToStep(4);
+    
+    return 'retro'; // Default mood
   };
   
-  // Function to export vibe as a JSON file
+  // Helper function to extract colors from images (placeholder - would actually analyze images)
+  const extractColorsFromImages = (imageUrls: string[]): string[] => {
+    // In a real implementation, this would analyze the images
+    // For now, return some placeholder colors based on the length of URLs
+    if (!imageUrls || imageUrls.length === 0) return ['#4e00ec', '#00ffcc'];
+    
+    // Use the URL strings to deterministically generate colors
+    const colors = imageUrls.map(url => {
+      const hash = url.split('').reduce((acc, char) => {
+        return char.charCodeAt(0) + ((acc << 5) - acc);
+      }, 0);
+      
+      const h = Math.abs(hash) % 360;
+      return `hsl(${h}, 80%, 60%)`;
+    });
+    
+    return colors.slice(0, 2); // Return at most 2 colors
+  };
+  
   const handleExport = () => {
-    if (!vibeData) {
-      console.log('VibeResultsScreen: Cannot export, no vibe data available');
-      return;
+    if (vibeData) {
+      exportVibeToHTML(vibeData, theme);
     }
-    
-    console.log('VibeResultsScreen: Exporting vibe data to JSON');
-    const dataStr = JSON.stringify(vibeData, null, 2);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    
-    const exportFileDefaultName = `vibe-${Date.now()}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+  };
+  
+  const handleBack = () => {
+    navigate('/');
+  };
+  
+  const handleRetry = () => {
+    window.location.reload();
   };
   
   if (loading) {
     return (
-      <CRTScreen>
-        <Container>
-          <LoadingContainer>
-            <TerminalText fontSize="1.5rem" color={colors.neonGreen} glitch>
-              LOADING YOUR VIBE...
-            </TerminalText>
-          </LoadingContainer>
-        </Container>
-      </CRTScreen>
+      <Container>
+        <ContentWrapper>
+          <Section>
+            <LoadingSpinner size={60} />
+            <p style={{ textAlign: 'center' }}>Generating your vibe experience...</p>
+          </Section>
+        </ContentWrapper>
+      </Container>
     );
   }
   
   if (error) {
     return (
-      <CRTScreen>
-        <Container>
+      <Container>
+        <ContentWrapper>
           <ErrorMessage>
-            <TerminalText fontSize="1.2rem" color={colors.neonRed}>
-              ERROR: {error}
-            </TerminalText>
+            <p>Error: {error}</p>
             <ButtonContainer>
-              <RetroButton onClick={handleRegenerate}>
-                Try Again
-              </RetroButton>
+              <BackButton onClick={handleBack}>Go Back</BackButton>
+              <Button onClick={handleRetry}>Retry</Button>
             </ButtonContainer>
           </ErrorMessage>
-        </Container>
-      </CRTScreen>
+        </ContentWrapper>
+      </Container>
     );
   }
   
   if (!vibeData) {
+    console.error('VibeResultsScreen: No vibe data available');
     return (
-      <CRTScreen>
-        <Container>
+      <Container>
+        <ContentWrapper>
           <ErrorMessage>
-            <TerminalText fontSize="1.2rem" color={colors.neonRed}>
-              No vibe data available. Please generate a vibe first.
-            </TerminalText>
+            <p>No vibe data available. Please try again.</p>
             <ButtonContainer>
-              <RetroButton onClick={handleRegenerate} glowing>
-                Generate Vibe
-              </RetroButton>
+              <BackButton onClick={handleBack}>GO BACK</BackButton>
+              <Button onClick={handleRetry}>Retry</Button>
             </ButtonContainer>
           </ErrorMessage>
-        </Container>
-      </CRTScreen>
+        </ContentWrapper>
+      </Container>
     );
   }
   
-  // Convert API response format to match our component needs
-  const title = vibeData.summary.title;
-  const summary = vibeData.summary.description;
-  const description = vibeData.summary.description;
-  const imageUrls = vibeData.images.map((img: { url: string, prompt: string }) => img.url);
-  const songRecommendations = vibeData.songs.map((song: { title: string, artist: string, uri?: string }) => ({
-    title: song.title,
-    artist: song.artist
-  }));
+  // Get mood for conditional styling
+  const mood = vibeData.mood || extractMoodFromText(vibeData.description || '');
   
   return (
-    <CRTScreen>
-      <Container>
-        <VibeTitle>{title}</VibeTitle>
+    <Container>
+      <ContentWrapper>
+        <VibeTitle>{vibeData.title}</VibeTitle>
+        <Description>{vibeData.description}</Description>
         
-        <ResultsContainer>
-          <Section>
-            <SectionTitle>Vibe Summary</SectionTitle>
-            <Description>{summary}</Description>
-          </Section>
-          
-          <Section>
-            <SectionTitle>Description</SectionTitle>
-            <Description>{description}</Description>
-          </Section>
-          
-          <Section>
+        {vibeData.imageUrls && vibeData.imageUrls.length > 0 && (
+          <Section $mood={mood}>
             <SectionTitle>Visual Inspiration</SectionTitle>
             <ImagesGrid>
-              {imageUrls.map((url: string, index: number) => (
-                <VibeImage 
-                  key={index} 
-                  src={url} 
-                  alt={`Vibe visual ${index + 1}`} 
-                  loading="lazy" 
-                />
+              {vibeData.imageUrls.map((url, index) => (
+                <VibeImage key={`image-${index}`} src={url} alt={`Vibe inspiration ${index + 1}`} />
               ))}
             </ImagesGrid>
           </Section>
-          
-          <Section>
+        )}
+        
+        {vibeData.playlist && (
+          <SongsSection $mood={mood}>
             <SectionTitle>Soundtrack</SectionTitle>
-            <SongList>
-              {songRecommendations.map((song: {title: string, artist: string}, index: number) => (
-                <SongItem key={index}>
-                  <span>{song.title}</span>
-                  <span>{song.artist}</span>
-                </SongItem>
-              ))}
-            </SongList>
-          </Section>
-          
-          <ButtonContainer>
-            <RetroButton onClick={() => goToStep(4)}>
-              Back to Questions
-            </RetroButton>
-            <RetroButton onClick={handleRegenerate} glowing>
-              Generate New Vibe
-            </RetroButton>
-            <RetroButton onClick={handleExport}>
-              Export Vibe
-            </RetroButton>
-          </ButtonContainer>
-        </ResultsContainer>
-      </Container>
-    </CRTScreen>
+            <p>Explore this vibe's sounds: <a href={vibeData.playlist} target="_blank" rel="noopener noreferrer">{vibeData.playlist}</a></p>
+          </SongsSection>
+        )}
+        
+        <ButtonContainer>
+          <BackButton onClick={handleBack}>Create New Vibe</BackButton>
+          <ExportButton onClick={handleExport}>Export Vibe</ExportButton>
+        </ButtonContainer>
+      </ContentWrapper>
+    </Container>
   );
 };
 

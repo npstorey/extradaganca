@@ -65,8 +65,8 @@ const SOUND_EFFECTS: SoundEffect[] = [
 /**
  * Custom hook for managing sound effects
  */
-export const useSoundEffects = (autoInit = true) => {
-  const [enabled, setEnabled] = useState(true);
+export const useSoundEffects = (autoInit = false) => {
+  const [enabled, setEnabled] = useState(false);
   const [soundsLoaded, setSoundsLoaded] = useState(false);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const loadAttempted = useRef<boolean>(false);
@@ -75,13 +75,25 @@ export const useSoundEffects = (autoInit = true) => {
   useEffect(() => {
     if (!autoInit || loadAttempted.current) return;
     
+    // If autoInit is true but we don't want to actually load sounds,
+    // just mark them as "loaded" to avoid errors
+    if (!enabled) {
+      setSoundsLoaded(true);
+      loadAttempted.current = true;
+      return;
+    }
+    
     loadAttempted.current = true;
     console.log('Initializing sound effects...');
     
     // Try to create audio elements, but handle missing files gracefully
     let loadedCount = 0;
     const totalSounds = SOUND_EFFECTS.length;
+
+    // Just mark sounds as loaded to avoid errors with missing files
+    setSoundsLoaded(true);
     
+    // Optional: If you want to still try loading some sounds that might exist:
     SOUND_EFFECTS.forEach(sound => {
       try {
         const audio = new Audio();
@@ -97,7 +109,7 @@ export const useSoundEffects = (autoInit = true) => {
         });
         
         audio.addEventListener('error', (e) => {
-          console.warn(`Failed to load sound "${sound.id}":`, e);
+          console.warn(`Failed to load sound "${sound.id}" - file may be missing`);
           // Still count as "loaded" to avoid hanging
           loadedCount++;
           if (loadedCount === totalSounds) {
@@ -134,7 +146,7 @@ export const useSoundEffects = (autoInit = true) => {
         console.warn('Sound loading timeout - marking as loaded anyway');
         setSoundsLoaded(true);
       }
-    }, 5000);
+    }, 2000); // Reduced from 5000 to 2000 ms
     
     // Cleanup on unmount
     return () => {
@@ -146,7 +158,7 @@ export const useSoundEffects = (autoInit = true) => {
         }
       });
     };
-  }, [autoInit, soundsLoaded]);
+  }, [autoInit, soundsLoaded, enabled]);
   
   /**
    * Play a sound by its ID
