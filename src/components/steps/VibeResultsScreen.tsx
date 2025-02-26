@@ -439,12 +439,29 @@ const VibeResultsScreen: React.FC = () => {
           </Section>
         )}
         
-        {vibeData.playlist && (
-          <SongsSection $mood={mood}>
-            <SectionTitle>Soundtrack</SectionTitle>
+        {/* Show songs section if either playlist or songs are available */}
+        <SongsSection $mood={mood}>
+          <SectionTitle>Soundtrack</SectionTitle>
+          {vibeData.playlist ? (
             <p>Explore this vibe's sounds: <a href={vibeData.playlist} target="_blank" rel="noopener noreferrer">{vibeData.playlist}</a></p>
-          </SongsSection>
-        )}
+          ) : (
+            /* This is from the API - we're showing songs even without a playlist URL */
+            <div>
+              <p>Recommended tracks for this vibe:</p>
+              <SongList>
+                {Array.isArray(vibeData.songs) && vibeData.songs.length > 0 ? (
+                  vibeData.songs.map((song, index) => (
+                    <SongItem key={`song-${index}`}>
+                      <SongTitle>{song.title}</SongTitle> by <SongArtist>{song.artist}</SongArtist>
+                    </SongItem>
+                  ))
+                ) : (
+                  <p>No song recommendations available.</p>
+                )}
+              </SongList>
+            </div>
+          )}
+        </SongsSection>
         
         <ButtonContainer>
           <BackButton onClick={handleBack}>Create New Vibe</BackButton>

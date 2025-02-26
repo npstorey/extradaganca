@@ -6,5 +6,6 @@ export interface Vibe {
   mood?: string;
   colors?: string[];
   activities?: string[];
+  songs?: { title: string; artist: string; uri?: string }[];
   extraInfo?: Record<string, any>;
 } 

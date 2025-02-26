@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-import { extractThemeFromVibe, defaultTheme, VibeTheme } from '../services/styleExtractionService';
+import { extractThemeFromVibe, VibeTheme } from '../services/styleExtractionService';
 import { Vibe } from '../types/vibe';
 
 interface ThemeUpdateOptions {
@@ -17,6 +17,29 @@ interface ThemeUpdateOptions {
     backgroundPattern?: string;
   };
 }
+
+// Default theme - locally defined since we no longer import it
+const defaultTheme: VibeTheme = {
+  primaryColor: '#4e00ec',
+  secondaryColor: '#ff00ff',
+  backgroundColor: '#0c0c14',
+  textColor: '#ffffff',
+  accentColor: '#00ffcc',
+  fontFamily: "'VT323', monospace",
+  titleFontFamily: "'Orbitron', sans-serif",
+  borderRadius: '4px',
+  spacing: '1rem',
+  glowEffect: '0 0 10px',
+  glowIntensity: 0.5,
+  borderStyle: 'solid',
+  textShadow: '0 0 5px',
+  backgroundPattern: 'none',
+  animationSpeed: 'normal',
+  layoutStyle: 'grid',
+  overlayEffect: 'none',
+  boxShadowStyle: '0 5px 15px rgba(0, 0, 0, 0.5)',
+  gradientOverlay: 'none'
+};
 
 interface ThemeContextType {
   theme: VibeTheme;

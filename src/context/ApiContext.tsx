@@ -39,6 +39,11 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       mood: extractMoodFromDescription(generatedVibe.summary.description),
       colors: ['#4e00ec', '#00ffcc'], // Default colors
       activities: [],
+      songs: generatedVibe.songs.map(song => ({
+        title: song.title,
+        artist: song.artist,
+        uri: song.uri
+      })),
     };
   };
 

@@ -1,218 +1,291 @@
 import Color from 'color';
 import { Vibe } from '../types/vibe';
 
-// Default theme values (baseline retro-futuristic theme)
-export const defaultTheme = {
-  primaryColor: '#4e00ec',
-  secondaryColor: '#ff00ff',
-  backgroundColor: '#0c0c14',
-  textColor: '#ffffff',
-  accentColor: '#00ffcc',
-  fontFamily: "'Press Start 2P', cursive",
-  titleFontFamily: "'Orbitron', sans-serif",
-  borderRadius: '4px',
-  spacing: '1rem',
-  glowEffect: '0 0 10px',
-  glowIntensity: 0.5,
-  borderStyle: 'solid',
-  textShadow: '0 0 5px',
-  backgroundPattern: 'none',
-  animationSpeed: 'normal',
-  layoutStyle: 'grid',
-  overlayEffect: 'none',
-  boxShadowStyle: '0 5px 15px rgba(0, 0, 0, 0.5)',
-  gradientOverlay: 'none'
-};
-
-export type VibeTheme = typeof defaultTheme;
-
-// Map of mood keywords to color ranges
-const moodColorMap: Record<string, { primary: string, accent: string, background: string }> = {
-  // Energetic, exciting, adventurous
-  energetic: { 
-    primary: '#ff0000', // Red
-    accent: '#ffcc00',  // Gold
-    background: '#330000' // Dark red
-  },
-  exciting: { 
-    primary: '#ff4500', // Orange-Red
-    accent: '#ffff00',  // Yellow
-    background: '#240f00' // Dark brown
-  },
-  adventurous: { 
-    primary: '#ff8c00', // Dark Orange
-    accent: '#00ccff',  // Bright blue
-    background: '#2a1f00' // Dark amber
+// Style themes representing different aesthetic directions
+// These serve as complete style packages rather than just color schemes
+const styleThemes = {
+  // Retro-futuristic / synthwave style
+  retroFuturistic: {
+    primaryColor: '#4e00ec',
+    secondaryColor: '#ff00ff',
+    backgroundColor: '#0c0c14',
+    textColor: '#ffffff',
+    accentColor: '#00ffcc',
+    fontFamily: "'VT323', monospace",
+    titleFontFamily: "'Orbitron', sans-serif",
+    borderRadius: '4px',
+    spacing: '1rem',
+    glowEffect: '0 0 10px',
+    glowIntensity: 0.8,
+    borderStyle: 'solid',
+    textShadow: '0 0 5px',
+    backgroundPattern: 'linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
+    animationSpeed: 'fast',
+    layoutStyle: 'grid',
+    overlayEffect: 'linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0))',
+    boxShadowStyle: '0 5px 15px rgba(0, 0, 0, 0.5)',
+    gradientOverlay: 'none'
   },
   
-  // Calm, peaceful, relaxing
-  calm: { 
-    primary: '#4682b4', // Steel Blue
-    accent: '#a0d6b4',  // Seafoam
-    background: '#0c1f2a' // Dark blue-green
-  },
-  peaceful: { 
-    primary: '#87ceeb', // Sky Blue
-    accent: '#ffffff',  // White
-    background: '#19283a' // Muted navy
-  },
-  relaxing: { 
-    primary: '#add8e6', // Light Blue
-    accent: '#d4f0f0',  // Pale cyan
-    background: '#1a2e3b' // Deep teal
-  },
-  
-  // Happy, joyful, fun
-  happy: { 
-    primary: '#ffff00', // Yellow
-    accent: '#ff66cc',  // Pink
-    background: '#1f1f00' // Dark gold
-  },
-  joyful: { 
-    primary: '#ffd700', // Gold
-    accent: '#00ff00',  // Green
-    background: '#1e1a00' // Dark amber
-  },
-  fun: { 
-    primary: '#ffa500', // Orange
-    accent: '#ff00ff',  // Magenta
-    background: '#1f1200' // Brown
-  },
-  
-  // Mysterious, dark, edgy
-  mysterious: { 
-    primary: '#800080', // Purple
-    accent: '#00ffcc',  // Neon green-blue
-    background: '#150015' // Very dark purple
-  },
-  dark: { 
-    primary: '#483d8b', // Dark Slate Blue
-    accent: '#9370db',  // Medium purple
-    background: '#0d0a1c' // Nearly black blue
-  },
-  edgy: { 
-    primary: '#191970', // Midnight Blue
-    accent: '#ff0000',  // Red
-    background: '#06061c' // Nearly black blue
-  },
-  
-  // Futuristic, tech
-  futuristic: { 
-    primary: '#00ff00', // Neon Green
-    accent: '#00ccff',  // Cyan blue
-    background: '#001a00' // Dark green
-  },
-  tech: { 
-    primary: '#00ffff', // Cyan
-    accent: '#ff00ff',  // Magenta
-    background: '#001a1a' // Dark cyan
-  },
-  cyberpunk: { 
-    primary: '#ff00ff', // Magenta
-    accent: '#00ffff',  // Cyan
-    background: '#1a001a' // Dark magenta
-  },
-  
-  // Retro, vintage
-  retro: { 
-    primary: '#ff00ff', // Magenta
-    accent: '#ffcc00',  // Gold
-    background: '#0d0d0d' // Dark gray
-  },
-  vintage: { 
-    primary: '#deb887', // Burlywood
-    accent: '#a0522d',  // Sienna
-    background: '#211c13' // Dark sepia
-  },
-  
-  // Romantic, dreamy
-  romantic: { 
-    primary: '#ff69b4', // Hot Pink
-    accent: '#e6e6fa',  // Lavender
-    background: '#1f141b' // Dark mauve
-  },
-  dreamy: { 
-    primary: '#da70d6', // Orchid
-    accent: '#87cefa',  // Light sky blue
-    background: '#1a121a' // Dark lavender
-  }
-};
-
-// Map of mood keywords to font families
-const fontMap: Record<string, { title: string, body: string }> = {
-  retro: {
-    title: "'Press Start 2P', cursive",
-    body: "'VT323', monospace"
-  },
-  tech: {
-    title: "'Share Tech Mono', monospace",
-    body: "'Share Tech Mono', monospace"
-  },
-  futuristic: {
-    title: "'Orbitron', sans-serif",
-    body: "'Rajdhani', sans-serif"
-  },
-  vintage: {
-    title: "'Special Elite', cursive",
-    body: "'Courier New', monospace"
-  },
-  elegant: {
-    title: "'Playfair Display', serif",
-    body: "'Cormorant Garamond', serif"
-  },
+  // Playful, childlike, whimsical style
   playful: {
-    title: "'Fredoka One', cursive",
-    body: "'Quicksand', sans-serif"
+    primaryColor: '#ff66cc',
+    secondaryColor: '#ffcc00',
+    backgroundColor: '#fff5f9',
+    textColor: '#333333',
+    accentColor: '#66ccff',
+    fontFamily: "'Comic Neue', cursive",
+    titleFontFamily: "'Fredoka One', cursive",
+    borderRadius: '24px',
+    spacing: '1.2rem',
+    glowEffect: 'none',
+    glowIntensity: 0,
+    borderStyle: 'dashed',
+    textShadow: 'none',
+    backgroundPattern: 'radial-gradient(rgba(255, 102, 204, 0.1) 1px, transparent 1px)',
+    animationSpeed: 'fast',
+    layoutStyle: 'flex-wrap',
+    overlayEffect: 'none',
+    boxShadowStyle: '0 8px 0 rgba(0,0,0,0.1)',
+    gradientOverlay: 'linear-gradient(120deg, rgba(255,255,255,0.7), rgba(255,255,255,0))'
   },
-  serious: {
-    title: "'Roboto Mono', monospace",
-    body: "'Roboto', sans-serif"
+  
+  // Elegant, sophisticated, luxury style
+  elegant: {
+    primaryColor: '#c9b37e',
+    secondaryColor: '#1a1a1a',
+    backgroundColor: '#ffffff',
+    textColor: '#1a1a1a',
+    accentColor: '#c9b37e',
+    fontFamily: "'Cormorant Garamond', serif",
+    titleFontFamily: "'Playfair Display', serif",
+    borderRadius: '0px',
+    spacing: '2rem',
+    glowEffect: 'none',
+    glowIntensity: 0,
+    borderStyle: 'solid',
+    textShadow: 'none',
+    backgroundPattern: 'none',
+    animationSpeed: 'slow',
+    layoutStyle: 'flex-column',
+    overlayEffect: 'none',
+    boxShadowStyle: '0 1px 3px rgba(0,0,0,0.1)',
+    gradientOverlay: 'none'
   },
+  
+  // Mysterious, dark, gothic style
   mysterious: {
-    title: "'Cinzel', serif",
-    body: "'Cormorant', serif"
+    primaryColor: '#800020',
+    secondaryColor: '#483d8b',
+    backgroundColor: '#0d0d0d',
+    textColor: '#d3d3d3',
+    accentColor: '#9370db',
+    fontFamily: "'Cormorant', serif",
+    titleFontFamily: "'Playfair Display', serif",
+    borderRadius: '0px',
+    spacing: '2rem',
+    glowEffect: '0 0 15px',
+    glowIntensity: 0.3,
+    borderStyle: 'solid',
+    textShadow: '2px 2px 8px rgba(128,0,32,0.7)',
+    backgroundPattern: 'radial-gradient(rgba(128, 0, 32, 0.1) 1px, transparent 1px)',
+    animationSpeed: 'slow',
+    layoutStyle: 'flex-column',
+    overlayEffect: 'radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.7) 100%)',
+    boxShadowStyle: '0 10px 30px rgba(0, 0, 0, 0.8)',
+    gradientOverlay: 'linear-gradient(to bottom, rgba(13,13,13,0), rgba(128,0,32,0.1))'
   },
-  cyberpunk: {
-    title: "'Turret Road', cursive",
-    body: "'Chakra Petch', sans-serif"
+  
+  // Clean, minimalist, modern style
+  minimalist: {
+    primaryColor: '#000000',
+    secondaryColor: '#555555',
+    backgroundColor: '#ffffff',
+    textColor: '#333333',
+    accentColor: '#4285f4',
+    fontFamily: "'Inter', sans-serif",
+    titleFontFamily: "'Montserrat', sans-serif",
+    borderRadius: '2px',
+    spacing: '2rem',
+    glowEffect: 'none',
+    glowIntensity: 0,
+    borderStyle: 'none',
+    textShadow: 'none',
+    backgroundPattern: 'none',
+    animationSpeed: 'normal',
+    layoutStyle: 'flex',
+    overlayEffect: 'none',
+    boxShadowStyle: '0 1px 2px rgba(0,0,0,0.07)',
+    gradientOverlay: 'none'
   },
+  
+  // Natural, earthy, organic style
+  natural: {
+    primaryColor: '#5d4037',
+    secondaryColor: '#7cb342',
+    backgroundColor: '#f5f3e7',
+    textColor: '#3e2723',
+    accentColor: '#8d6e63',
+    fontFamily: "'Quattrocento Sans', sans-serif",
+    titleFontFamily: "'Amatic SC', cursive",
+    borderRadius: '8px',
+    spacing: '1.5rem',
+    glowEffect: 'none',
+    glowIntensity: 0,
+    borderStyle: 'solid',
+    textShadow: 'none',
+    backgroundPattern: 'none',
+    animationSpeed: 'slow',
+    layoutStyle: 'flex-column',
+    overlayEffect: 'none',
+    boxShadowStyle: '0 4px 6px rgba(93, 64, 55, 0.2)',
+    gradientOverlay: 'linear-gradient(to bottom, rgba(245, 243, 231, 0), rgba(245, 243, 231, 0.8))'
+  },
+  
+  // Default base theme (retroFuturistic as fallback)
   default: {
-    title: "'Press Start 2P', cursive",
-    body: "'VT323', monospace"
+    primaryColor: '#4e00ec',
+    secondaryColor: '#ff00ff',
+    backgroundColor: '#0c0c14',
+    textColor: '#ffffff',
+    accentColor: '#00ffcc',
+    fontFamily: "'VT323', monospace",
+    titleFontFamily: "'Orbitron', sans-serif",
+    borderRadius: '4px',
+    spacing: '1rem',
+    glowEffect: '0 0 10px',
+    glowIntensity: 0.5,
+    borderStyle: 'solid',
+    textShadow: '0 0 5px',
+    backgroundPattern: 'none',
+    animationSpeed: 'normal',
+    layoutStyle: 'grid',
+    overlayEffect: 'none',
+    boxShadowStyle: '0 5px 15px rgba(0, 0, 0, 0.5)',
+    gradientOverlay: 'none'
   }
 };
 
-// Map of style keywords to layout styles
-const layoutStyleMap: Record<string, string> = {
-  clean: 'flex',
-  dynamic: 'grid',
-  compact: 'flex-column',
-  spacious: 'grid-wide',
-  organized: 'columns',
-  chaotic: 'asymmetric',
-  horizontal: 'flex-wrap',
-  vertical: 'flex-column',
-  layered: 'stacked',
-  minimal: 'minimal',
-  default: 'grid'
+export type VibeTheme = typeof styleThemes.default;
+
+// Map of mood keywords to style themes
+const moodStyleMap: Record<string, keyof typeof styleThemes> = {
+  // Energetic, exciting moods
+  energetic: 'retroFuturistic',
+  exciting: 'retroFuturistic',
+  vibrant: 'retroFuturistic',
+  
+  // Happy, playful moods
+  happy: 'playful',
+  playful: 'playful',
+  joyful: 'playful',
+  fun: 'playful',
+  whimsical: 'playful',
+  childlike: 'playful',
+  magical: 'playful',
+  
+  // Calm, elegant moods
+  elegant: 'elegant', 
+  sophisticated: 'elegant',
+  luxury: 'elegant',
+  classy: 'elegant',
+  
+  // Mysterious, gothic moods
+  mysterious: 'mysterious',
+  dark: 'mysterious',
+  shadowy: 'mysterious',
+  gothic: 'mysterious',
+  eerie: 'mysterious',
+  
+  // Minimalist, clean moods
+  minimalist: 'minimalist',
+  clean: 'minimalist',
+  modern: 'minimalist',
+  simple: 'minimalist',
+  
+  // Natural, earthy moods
+  natural: 'natural',
+  earthy: 'natural',
+  organic: 'natural',
+  rustic: 'natural'
 };
 
-// Map for background patterns based on vibe
-const backgroundPatternMap: Record<string, string> = {
-  tech: 'linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px)',
+// Map of font pairs for different styles
+const fontPairings = {
+  // Additional font pairings to choose from
+  handwritten: {
+    title: "'Permanent Marker', cursive",
+    body: "'Caveat', cursive"
+  },
+  
+  scifi: {
+    title: "'Orbitron', sans-serif",
+    body: "'Exo 2', sans-serif"
+  },
+  
+  fantasy: {
+    title: "'MedievalSharp', cursive",
+    body: "'Metamorphous', serif"
+  },
+  
+  technical: {
+    title: "'Share Tech Mono', monospace",
+    body: "'Source Code Pro', monospace"
+  },
+  
+  romantic: {
+    title: "'Great Vibes', cursive",
+    body: "'Lora', serif"
+  },
+  
+  corporate: {
+    title: "'Montserrat', sans-serif",
+    body: "'Open Sans', sans-serif"
+  },
+  
+  retro70s: {
+    title: "'Monoton', cursive",
+    body: "'Poppins', sans-serif"
+  },
+  
+  retro80s: {
+    title: "'Press Start 2P', cursive",
+    body: "'VT323', monospace"
+  },
+  
+  artDeco: {
+    title: "'Poiret One', cursive",
+    body: "'Josefin Sans', sans-serif"
+  }
+};
+
+// More diverse layout options
+const layoutOptions = {
+  grid: 'grid',
+  flexColumn: 'flex-column',
+  flexRow: 'flex-row',
+  masonry: 'masonry',
+  magazine: 'magazine',
+  cards: 'cards',
+  polaroid: 'polaroid',
+  timeline: 'timeline',
+  diagonal: 'diagonal',
+  circular: 'circular',
+  asymmetric: 'asymmetric',
+  stacked: 'stacked'
+};
+
+// More diverse background patterns
+const backgroundPatterns = {
   grid: 'linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
   dots: 'radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
-  waves: 'repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px)',
+  diagonalLines: 'repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px)',
+  horizontalLines: 'linear-gradient(0deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
+  verticalLines: 'linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
   noise: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
   circuit: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Cpath fill=\'none\' stroke=\'%23333\' stroke-width=\'0.25\' d=\'M10 10L90 10M10 20L90 20M10 30L90 30M10 40L90 40M10 50L90 50M10 60L90 60M10 70L90 70M10 80L90 80M10 90L90 90M10 10L10 90M20 10L20 90M30 10L30 90M40 10L40 90M50 10L50 90M60 10L60 90M70 10L70 90M80 10L80 90M90 10L90 90\'/%3E%3C/svg%3E")',
-  none: 'none'
-};
-
-// Map for overlay effects
-const overlayEffectMap: Record<string, string> = {
-  scanlines: 'linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0))',
-  vignette: 'radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%)',
-  grain: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
+  confetti: 'url("data:image/svg+xml,%3Csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'confetti\' patternUnits=\'userSpaceOnUse\' width=\'40\' height=\'40\' patternTransform=\'scale(1) rotate(0)\'%3E%3Crect x=\'15\' y=\'10\' width=\'2\' height=\'2\' fill=\'%23FF00FF20\'/%3E%3Crect x=\'25\' y=\'16\' width=\'1\' height=\'1\' fill=\'%2300FFFF20\'/%3E%3Crect x=\'33\' y=\'33\' width=\'3\' height=\'3\' fill=\'%23FFFF0020\'/%3E%3Crect x=\'10\' y=\'25\' width=\'2\' height=\'2\' fill=\'%23FF000020\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'url(%23confetti)\'/%3E%3C/svg%3E")',
+  bubbles: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle fill=\'%23FFFFFF10\' cx=\'20\' cy=\'20\' r=\'5\'/%3E%3Ccircle fill=\'%23FFFFFF10\' cx=\'60\' cy=\'40\' r=\'7\'/%3E%3Ccircle fill=\'%23FFFFFF10\' cx=\'35\' cy=\'75\' r=\'4\'/%3E%3Ccircle fill=\'%23FFFFFF10\' cx=\'80\' cy=\'80\' r=\'6\'/%3E%3C/svg%3E")',
   none: 'none'
 };
 
@@ -228,395 +301,201 @@ export const extractMood = (vibe: Vibe): string => {
   // Check title and description for mood keywords
   const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
   
-  // Create an array of all mood keywords
-  const moodKeywords = Object.keys(moodColorMap);
-  
-  for (const mood of moodKeywords) {
+  // Look for specific mood keywords
+  for (const mood of Object.keys(moodStyleMap)) {
     if (allText.includes(mood)) {
       return mood;
     }
   }
   
-  // If no specific mood is found, try to categorize broader mood groups
-  if (/calm|peaceful|tranquil|serene|gentle/i.test(allText)) {
-    return 'calm';
-  } else if (/energ|vibrant|lively|dynamic|active/i.test(allText)) {
-    return 'energetic';
-  } else if (/happy|joy|fun|playful|cheerful/i.test(allText)) {
-    return 'happy';
-  } else if (/myster|dark|shadow|enigma|obscure/i.test(allText)) {
+  // If no direct match, try broader categories
+  if (/pink|playful|whimsi|magic|unicorn|fantasy|fairy|child/i.test(allText)) {
+    return 'playful';
+  } else if (/jazz|crimson|moon|night|mysterious|noir|shadow|saxophone|steakhouse|saxophone|dimly lit|red light|aura/i.test(allText)) {
     return 'mysterious';
-  } else if (/future|tech|cyber|digital|scifi/i.test(allText)) {
-    return 'futuristic';
-  } else if (/retro|vintage|old|classic|nostalgic/i.test(allText)) {
-    return 'retro';
-  } else if (/romantic|love|passion|intimate|dreamy/i.test(allText)) {
-    return 'romantic';
+  } else if (/elegant|sophisticated|class|luxury|formal|rich/i.test(allText)) {
+    return 'elegant';
+  } else if (/clean|simple|minimal|modern|sleek|pure/i.test(allText)) {
+    return 'minimalist';
+  } else if (/nature|natural|earth|organic|wood|plant|forest|leaf/i.test(allText)) {
+    return 'natural';
+  } else if (/neon|cyber|digital|future|tech|retro|synth/i.test(allText)) {
+    return 'retroFuturistic';
   }
   
-  // Default to neutral mood
-  return 'retro';
-};
-
-/**
- * Extracts a primary color from the vibe content
- */
-const extractPrimaryColor = (vibe: Vibe): string => {
-  // If colors are explicitly provided, use the first one
-  if (vibe.colors && vibe.colors.length > 0) {
-    return vibe.colors[0];
+  // Analyze dominant color mentions
+  if (/red|crimson|maroon|ruby|scarlet/i.test(allText)) {
+    return 'mysterious';
+  } else if (/pink|magenta|rose|fuchsia/i.test(allText)) {
+    return 'playful';
+  } else if (/blue|azure|sapphire|navy/i.test(allText)) {
+    return 'retroFuturistic';
+  } else if (/green|emerald|mint|olive/i.test(allText)) {
+    return 'natural';
+  } else if (/gold|yellow|amber|bronze/i.test(allText)) {
+    return 'elegant';
+  } else if (/white|gray|silver|black/i.test(allText)) {
+    return 'minimalist';
+  } else if (/purple|violet|lavender|indigo/i.test(allText)) {
+    return 'mysterious';
   }
   
-  // Extract mood and use its color scheme
-  const mood = extractMood(vibe);
-  if (moodColorMap[mood]) {
-    return moodColorMap[mood].primary;
+  // Analyze references to time periods and aesthetics
+  if (/80s|retro|synth|neon|arcade|wave/i.test(allText)) {
+    return 'retroFuturistic';
+  } else if (/victorian|gothic|ancient|medieval|classical/i.test(allText)) {
+    return 'mysterious';
+  } else if (/modern|contemporary|futuristic|sleek/i.test(allText)) {
+    return 'minimalist';
+  } else if (/rustic|cottage|garden|wild|forest/i.test(allText)) {
+    return 'natural';
   }
   
-  // Default to the default theme color
-  return defaultTheme.primaryColor;
-};
-
-/**
- * Extracts accent color from the vibe
- */
-const extractAccentColor = (vibe: Vibe): string => {
-  // If colors are explicitly provided, use the second one or generate a complement
-  if (vibe.colors && vibe.colors.length > 1) {
-    return vibe.colors[1];
-  }
-  
-  // Extract mood and use its accent color
-  const mood = extractMood(vibe);
-  if (moodColorMap[mood]) {
-    return moodColorMap[mood].accent;
-  }
-  
-  // Create a complementary color to the primary
-  try {
-    const primaryColor = extractPrimaryColor(vibe);
-    const color = Color(primaryColor);
-    return color.rotate(180).saturate(0.2).hex();
-  } catch (error) {
-    return defaultTheme.accentColor;
-  }
-};
-
-/**
- * Extracts background color based on primary color and mood
- */
-const extractBackgroundColor = (vibe: Vibe): string => {
-  try {
-    // Extract mood and use its background color
-    const mood = extractMood(vibe);
-    if (moodColorMap[mood]) {
-      return moodColorMap[mood].background;
-    }
-    
-    // Otherwise create a dark shade of the primary color
-    const primaryColor = extractPrimaryColor(vibe);
-    const color = Color(primaryColor);
-    return color.darken(0.75).desaturate(0.3).hex();
-  } catch (error) {
-    console.error('Error generating background color:', error);
-    return defaultTheme.backgroundColor;
-  }
-};
-
-/**
- * Extracts text color ensuring contrast with background
- */
-const extractTextColor = (backgroundColor: string): string => {
-  try {
-    const bgColor = Color(backgroundColor);
-    // Ensure high contrast for text
-    return bgColor.isDark() ? '#ffffff' : '#0c0c14';
-  } catch (error) {
-    console.error('Error generating text color:', error);
-    return defaultTheme.textColor;
-  }
-};
-
-/**
- * Extracts font families based on mood and vibe keywords
- */
-const extractFonts = (vibe: Vibe): { titleFont: string, bodyFont: string } => {
-  // Check all text for style hints
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  // First try to match specific style keywords
-  for (const [keyword, fonts] of Object.entries(fontMap)) {
-    if (allText.includes(keyword)) {
-      return { titleFont: fonts.title, bodyFont: fonts.body };
-    }
-  }
-  
-  // If no specific style found, use the mood to determine font
-  const mood = extractMood(vibe);
-  if (mood === 'futuristic' || mood === 'tech') {
-    return { titleFont: fontMap.futuristic.title, bodyFont: fontMap.tech.body };
-  } else if (mood === 'retro' || mood === 'vintage') {
-    return { titleFont: fontMap.retro.title, bodyFont: fontMap.retro.body };
-  } else if (mood === 'mysterious' || mood === 'dark') {
-    return { titleFont: fontMap.mysterious.title, bodyFont: fontMap.mysterious.body };
-  } else if (mood === 'happy' || mood === 'fun' || mood === 'joyful') {
-    return { titleFont: fontMap.playful.title, bodyFont: fontMap.playful.body };
-  } else if (mood === 'calm' || mood === 'peaceful') {
-    return { titleFont: fontMap.elegant.title, bodyFont: fontMap.elegant.body };
-  }
-  
-  // Default fonts
-  return { titleFont: fontMap.default.title, bodyFont: fontMap.default.body };
-};
-
-/**
- * Extracts layout style based on vibe content
- */
-const extractLayoutStyle = (vibe: Vibe): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  for (const [keyword, style] of Object.entries(layoutStyleMap)) {
-    if (allText.includes(keyword)) {
-      return style;
-    }
-  }
-  
-  // Extract by mood
-  const mood = extractMood(vibe);
-  if (mood === 'chaotic' || mood === 'exciting') {
-    return 'asymmetric';
-  } else if (mood === 'calm' || mood === 'peaceful') {
-    return 'spacious';
-  } else if (mood === 'organized' || mood === 'tech') {
-    return 'grid';
-  }
-  
-  return defaultTheme.layoutStyle;
-};
-
-/**
- * Extract background pattern based on vibe
- */
-const extractBackgroundPattern = (vibe: Vibe): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  if (/tech|digital|cyber|circuit|computer/i.test(allText)) {
-    return backgroundPatternMap.circuit;
-  } else if (/grid|matrix|pattern|order/i.test(allText)) {
-    return backgroundPatternMap.grid;
-  } else if (/dot|point|spot|constellation/i.test(allText)) {
-    return backgroundPatternMap.dots;
-  } else if (/wave|flow|ocean|water|smooth/i.test(allText)) {
-    return backgroundPatternMap.waves;
-  } else if (/noise|static|grain|distort/i.test(allText)) {
-    return backgroundPatternMap.noise;
-  }
-  
-  // Extract by mood
-  const mood = extractMood(vibe);
-  if (mood === 'tech' || mood === 'futuristic') {
-    return backgroundPatternMap.tech;
-  } else if (mood === 'mysterious') {
-    return backgroundPatternMap.noise;
-  }
-  
-  return backgroundPatternMap.none;
-};
-
-/**
- * Extract overlay effect based on vibe
- */
-const extractOverlayEffect = (vibe: Vibe): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  if (/screen|monitor|tv|display|retro/i.test(allText)) {
-    return overlayEffectMap.scanlines;
-  } else if (/dark|shadow|night|noir|mystic/i.test(allText)) {
-    return overlayEffectMap.vignette;
-  } else if (/grain|noise|film|analog|vintage/i.test(allText)) {
-    return overlayEffectMap.grain;
-  }
-  
-  // Extract by mood
-  const mood = extractMood(vibe);
-  if (mood === 'retro' || mood === 'vintage') {
-    return overlayEffectMap.scanlines;
-  } else if (mood === 'mysterious' || mood === 'dark') {
-    return overlayEffectMap.vignette;
-  }
-  
-  return overlayEffectMap.none;
-};
-
-/**
- * Extract border style based on vibe
- */
-const extractBorderStyle = (vibe: Vibe): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  if (/tech|digital|cyber|future/i.test(allText)) {
-    return 'solid';
-  } else if (/flow|wave|ocean|water/i.test(allText)) {
-    return 'none';
-  } else if (/retro|vintage|classic/i.test(allText)) {
-    return 'dashed';
-  } else if (/playful|fun|joyful/i.test(allText)) {
-    return 'dotted';
-  }
-  
-  return 'solid';
-};
-
-/**
- * Extract box shadow style based on vibe
- */
-const extractBoxShadowStyle = (vibe: Vibe, primaryColor: string): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  const mood = extractMood(vibe);
-  
-  if (/glow|neon|luminous|bright/i.test(allText)) {
-    return `0 0 20px ${Color(primaryColor).alpha(0.5).toString()}`;
-  } else if (/shadow|dark|noir/i.test(allText)) {
-    return '0 10px 30px rgba(0, 0, 0, 0.7)';
-  } else if (/flat|minimal|clean/i.test(allText)) {
-    return 'none';
-  } else if (mood === 'futuristic' || mood === 'tech') {
-    return `0 5px 15px ${Color(primaryColor).darken(0.7).alpha(0.5).toString()}`;
-  }
-  
-  return defaultTheme.boxShadowStyle;
-};
-
-/**
- * Extract gradient overlay based on vibe
- */
-const extractGradientOverlay = (vibe: Vibe, primaryColor: string, accentColor: string): string => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  if (/gradient|rainbow|colorful/i.test(allText)) {
-    return `linear-gradient(45deg, ${Color(primaryColor).alpha(0.2).toString()}, ${Color(accentColor).alpha(0.2).toString()})`;
-  } else if (/sunset|dusk|dawn/i.test(allText)) {
-    return 'linear-gradient(to bottom, rgba(0,0,0,0), rgba(255,60,0,0.2))';
-  } else if (/night|dark|space/i.test(allText)) {
-    return 'linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,50,0.3))';
-  }
-  
-  return 'none';
-};
-
-/**
- * Extract glow intensity based on vibe
- */
-const extractGlowIntensity = (vibe: Vibe): number => {
-  const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-  
-  if (/bright|glow|neon|luminous|radiant/i.test(allText)) {
-    return 1.0;
-  } else if (/soft|gentle|subtle/i.test(allText)) {
-    return 0.3;
-  } else if (/dark|shadow|night/i.test(allText)) {
-    return 0.7;
-  }
-  
-  // Extract by mood
-  const mood = extractMood(vibe);
-  if (mood === 'futuristic' || mood === 'tech' || mood === 'cyberpunk') {
-    return 0.8;
-  } else if (mood === 'calm' || mood === 'peaceful') {
-    return 0.2;
-  }
-  
-  return 0.5;
+  // Default to retroFuturistic as the fallback
+  return 'retroFuturistic';
 };
 
 /**
  * Main function to extract a theme from vibe content
  */
 export const extractThemeFromVibe = (vibe: Vibe): VibeTheme => {
-  if (!vibe) return defaultTheme;
+  if (!vibe) return styleThemes.default;
   
   try {
     // Extract mood to guide our theme creation
     const mood = extractMood(vibe);
     console.log('Extracted mood:', mood);
     
-    // Extract colors
-    const primaryColor = extractPrimaryColor(vibe);
-    const accentColor = extractAccentColor(vibe);
-    const backgroundColor = extractBackgroundColor(vibe);
-    const textColor = extractTextColor(backgroundColor);
+    // Determine the base style theme to use
+    const baseStyleName = moodStyleMap[mood] || 'default';
+    const baseStyle = styleThemes[baseStyleName];
+    console.log('Using base style:', baseStyleName);
     
-    // Extract fonts
-    const { titleFont, bodyFont } = extractFonts(vibe);
+    // Create a copy of the base style to customize
+    const customTheme = { ...baseStyle };
     
-    // Extract layout style
-    const layoutStyle = extractLayoutStyle(vibe);
+    // Get color information from the vibe
+    if (vibe.colors && vibe.colors.length > 0) {
+      customTheme.primaryColor = vibe.colors[0];
+      if (vibe.colors.length > 1) {
+        customTheme.accentColor = vibe.colors[1];
+      }
+    }
     
-    // Extract border radius based on vibe
+    // Fine-tune the theme based on specific keywords in the vibe
     const allText = `${vibe.title} ${vibe.description}`.toLowerCase();
-    const isPlayful = ['fun', 'playful', 'joyful', 'happy', 'bouncy'].some(word => allText.includes(word));
-    const isTech = ['tech', 'futuristic', 'digital', 'cyber'].some(word => allText.includes(word));
-    const borderRadius = isPlayful ? '12px' : isTech ? '0px' : '4px';
     
-    // Extract glow effect
-    const glowIntensity = extractGlowIntensity(vibe);
-    const glowEffect = `0 0 ${Math.floor(glowIntensity * 20)}px`;
+    // Check for specific font style mentions
+    if (/handwritten|script|cursive|hand-drawn/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.handwritten.title;
+      customTheme.fontFamily = fontPairings.handwritten.body;
+    } else if (/technical|code|programming|computer|digital/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.technical.title;
+      customTheme.fontFamily = fontPairings.technical.body;
+    } else if (/fantasy|dragon|medieval|magic|wizard/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.fantasy.title;
+      customTheme.fontFamily = fontPairings.fantasy.body;
+    } else if (/romantic|love|passion|heart|dreamy/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.romantic.title;
+      customTheme.fontFamily = fontPairings.romantic.body;
+    } else if (/business|corporate|professional|formal/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.corporate.title;
+      customTheme.fontFamily = fontPairings.corporate.body;
+    } else if (/70s|disco|groove|funk/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.retro70s.title;
+      customTheme.fontFamily = fontPairings.retro70s.body;
+    } else if (/80s|arcade|synthwave|pixel/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.retro80s.title;
+      customTheme.fontFamily = fontPairings.retro80s.body;
+    } else if (/art deco|gatsby|1920s|elegant/i.test(allText)) {
+      customTheme.titleFontFamily = fontPairings.artDeco.title;
+      customTheme.fontFamily = fontPairings.artDeco.body;
+    }
     
-    // Extract spacing
-    const isSpacious = ['spacious', 'airy', 'open', 'vast'].some(word => allText.includes(word));
-    const isCrowded = ['crowded', 'dense', 'compact', 'tight'].some(word => allText.includes(word));
-    const spacing = isSpacious ? '2rem' : isCrowded ? '0.5rem' : '1rem';
+    // Check for layout mentions
+    if (/grid|tiled|gallery/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.grid;
+    } else if (/column|stack/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.flexColumn;
+    } else if (/row|side by side/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.flexRow;
+    } else if (/magazine|editorial/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.magazine;
+    } else if (/card|polaroid/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.polaroid;
+    } else if (/timeline|history/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.timeline;
+    } else if (/diagonal|angle/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.diagonal;
+    } else if (/circle|round/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.circular;
+    } else if (/chaos|random|asymmetric/i.test(allText)) {
+      customTheme.layoutStyle = layoutOptions.asymmetric;
+    }
     
-    // Extract border style
-    const borderStyle = extractBorderStyle(vibe);
+    // Check for pattern mentions
+    if (/grid|square|graph/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.grid;
+    } else if (/dot|spot|point/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.dots;
+    } else if (/diagonal|slant/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.diagonalLines;
+    } else if (/horizontal|row/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.horizontalLines;
+    } else if (/vertical|column/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.verticalLines;
+    } else if (/noise|static|grain/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.noise;
+    } else if (/circuit|tech|computer|digital/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.circuit;
+    } else if (/confetti|celebrate|party/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.confetti;
+    } else if (/bubble|dot|circle/i.test(allText)) {
+      customTheme.backgroundPattern = backgroundPatterns.bubbles;
+    }
     
-    // Extract background pattern
-    const backgroundPattern = extractBackgroundPattern(vibe);
+    // Fine-tune border radius based on the mood
+    if (baseStyleName === 'playful' || /bubble|round|soft/i.test(allText)) {
+      customTheme.borderRadius = '24px';
+    } else if (baseStyleName === 'elegant' || baseStyleName === 'mysterious' || /sharp|edge|corner/i.test(allText)) {
+      customTheme.borderRadius = '0px';
+    } else if (baseStyleName === 'minimalist' || /clean|simple/i.test(allText)) {
+      customTheme.borderRadius = '2px';
+    } else if (baseStyleName === 'natural' || /organic|rounded/i.test(allText)) {
+      customTheme.borderRadius = '8px';
+    }
     
-    // Extract overlay effect
-    const overlayEffect = extractOverlayEffect(vibe);
+    // Fine-tune border style
+    if (baseStyleName === 'playful' || /fun|casual|playful/i.test(allText)) {
+      customTheme.borderStyle = 'dashed';
+    } else if (baseStyleName === 'elegant' && /vintage|classic|luxury/i.test(allText)) {
+      customTheme.borderStyle = 'double';
+    } else if (baseStyleName === 'mysterious' && /ornate|detailed|intricate/i.test(allText)) {
+      customTheme.borderStyle = 'double';
+    } else if (baseStyleName === 'minimalist' || /clean|simple|modern/i.test(allText)) {
+      customTheme.borderStyle = 'none';
+    }
     
-    // Extract box shadow style
-    const boxShadowStyle = extractBoxShadowStyle(vibe, primaryColor);
+    // Set appropriate overlay effects
+    if (baseStyleName === 'retroFuturistic' || /retro|80s|arcade/i.test(allText)) {
+      customTheme.overlayEffect = 'linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0))';
+    } else if (baseStyleName === 'mysterious' || /dark|shadow|noir/i.test(allText)) {
+      customTheme.overlayEffect = 'radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%)';
+    } else if (/grainy|film|analog/i.test(allText)) {
+      customTheme.overlayEffect = 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")';
+    }
     
-    // Extract gradient overlay
-    const gradientOverlay = extractGradientOverlay(vibe, primaryColor, accentColor);
+    // Adjust animation speed
+    if (/energetic|fast|quick|rapid/i.test(allText)) {
+      customTheme.animationSpeed = 'fast';
+    } else if (/calm|slow|gentle|peaceful/i.test(allText)) {
+      customTheme.animationSpeed = 'slow';
+    }
     
-    // Extract animation speed
-    const isFast = ['fast', 'quick', 'rapid', 'energetic'].some(word => allText.includes(word));
-    const isSlow = ['slow', 'gentle', 'calm', 'peaceful'].some(word => allText.includes(word));
-    const animationSpeed = isFast ? 'fast' : isSlow ? 'slow' : 'normal';
-    
-    // Text shadow based on mood
-    const textShadow = mood === 'futuristic' || mood === 'tech' || mood === 'cyberpunk' 
-      ? `0 0 10px ${accentColor}80`
-      : mood === 'mysterious' || mood === 'dark' 
-        ? '2px 2px 4px rgba(0,0,0,0.5)'
-        : '0 0 5px';
-    
-    return {
-      primaryColor,
-      secondaryColor: accentColor,
-      backgroundColor,
-      textColor,
-      accentColor,
-      fontFamily: bodyFont,
-      titleFontFamily: titleFont,
-      borderRadius,
-      spacing,
-      glowEffect,
-      glowIntensity,
-      borderStyle,
-      textShadow,
-      backgroundPattern,
-      animationSpeed,
-      layoutStyle,
-      overlayEffect,
-      boxShadowStyle,
-      gradientOverlay
-    };
+    console.log('Generated custom theme:', customTheme);
+    return customTheme;
   } catch (error) {
     console.error('Error extracting theme from vibe:', error);
-    return defaultTheme;
+    return styleThemes.default;
   }
 }; 
