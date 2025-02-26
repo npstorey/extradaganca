@@ -152,6 +152,95 @@ vibe-generator/
    - Adjust timeout values and retry logic
    - Optimize performance where needed
 
+### Phase 5: Advanced Style Extraction System (Days 15-21)
+
+The Advanced Style Extraction System will create a sophisticated, modular approach to analyzing generated content (text, images, and music) and translating it into dynamic visual styling for the results page. This phase focuses on developing an intelligent system that can extract meaningful style parameters from the generated content and apply them creatively to enhance the user experience.
+
+#### 1. **Content Analysis Framework (Days 15-16)**
+
+   - **Semantic Text Analysis**
+     - Implement NLP techniques to extract key themes, emotions, and style indicators from vibe descriptions
+     - Create a weighted keyword system that maps specific terms to style attributes
+     - Develop context-aware analysis that understands cultural and temporal references
+
+   - **Visual Content Analysis**
+     - Implement color palette extraction from generated images
+     - Analyze dominant visual elements (textures, shapes, composition)
+     - Create image mood classification system (bright/dark, energetic/calm, etc.)
+     
+   - **Audio/Music Style Mapping**
+     - Develop genre-to-visual-style mapping system
+     - Extract tempo, instrumentation, and era information from song recommendations
+     - Create cross-modal translation from audio characteristics to visual elements
+
+#### 2. **Modular Style Parameter System (Days 17-18)**
+
+   - **Core Style Parameters**
+     - Create an expanded set of themeable parameters beyond colors:
+       - Typography system (font families, sizes, weights, line heights)
+       - Spacing system (margins, paddings, layout density)
+       - Animation characteristics (speed, easing, intensity)
+       - Texture and pattern generation
+       - Border styles and decorative elements
+   
+   - **Style Theme Architecture**
+     - Develop a composable theme structure with inheritance
+     - Create base themes for major mood categories (energetic, calm, mysterious, playful, etc.)
+     - Implement theme mixing capabilities for combined moods
+     - Add contextual overrides for specific content types
+
+   - **Style Decision Engine**
+     - Create a weighted decision system for resolving style conflicts
+     - Implement coherence rules to ensure harmonious combinations
+     - Add randomization within constraints for creative variation
+     - Develop fallback mechanisms for style attributes with low confidence
+
+#### 3. **Dynamic Layout System (Days 19-20)**
+
+   - **Content-Aware Layouts**
+     - Create multiple layout templates optimized for different content types
+     - Implement content density analysis to determine appropriate spacing
+     - Develop emphasis algorithms to highlight key elements based on content importance
+
+   - **Responsive Adaptations**
+     - Create device-specific layout variations
+     - Implement content reordering based on screen size and orientation
+     - Develop progressive enhancement for high-end devices
+
+   - **Interactive Elements**
+     - Create mood-appropriate interaction patterns
+     - Implement theme-consistent hover and focus states
+     - Develop animations and transitions that match the vibe's energy
+
+#### 4. **Integration and Testing (Day 21)**
+
+   - **Front-End Integration**
+     - Connect style extraction service to the VibeResultsScreen component
+     - Implement theme transitions for switching between generated vibes
+     - Create debugging tools to visualize style decisions
+   
+   - **User Testing**
+     - Conduct A/B testing with different style parameter weights
+     - Gather feedback on style-content coherence
+     - Measure user engagement with different style variations
+   
+   - **Performance Optimization**
+     - Optimize style calculation for minimal load time
+     - Implement style caching for quick transitions
+     - Add progressive loading for style-heavy elements
+
+#### Benefits and Deliverables
+
+This advanced style extraction system will provide:
+
+1. **Enhanced User Experience**: Each generated vibe will have a unique, content-appropriate visual presentation
+2. **Increased Engagement**: Users will receive more memorable and emotionally resonant results
+3. **Brand Differentiation**: The system will create a signature look that stands out from generic AI image generators
+4. **Technical Innovation**: The cross-modal content analysis represents cutting-edge work in creative AI
+5. **Scalability**: The modular approach allows for continuous improvement and expansion of style capabilities
+
+The completion of this phase will elevate the Vibe Generator from a functional prototype to a polished product with a memorable and distinctive user experience.
+
 ## External Setup Requirements
 
 Before starting development, you'll need to set up the following:
@@ -231,5 +320,6 @@ For development and initial testing:
 - Core Services Implementation: Days 3-7
 - Pipeline Orchestration: Days 8-9
 - Testing & Refinement: Days 10-14
+- Advanced Style Extraction System: Days 15-21
 
-Total estimated time: 2-3 weeks for MVP completion 
+Total estimated time: 3-4 weeks for MVP completion with advanced styling capabilities 
