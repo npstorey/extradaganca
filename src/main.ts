@@ -121,7 +121,8 @@ fastify.post('/generate-vibe', async (request, reply) => {
     try {
       // Enhance each prompt for better results
       const enhancedPrompts = imagePrompts.map(enhancePrompt);
-      images = await generateImages(enhancedPrompts.slice(0, 5)); // Limit to 5 images
+      // Temporarily reduce to 1 image for testing to cut down on API costs
+      images = await generateImages(enhancedPrompts.slice(0, 1)); // Limit to 1 image for testing
       console.log(`Generated ${images.length} images`);
     } catch (error) {
       console.error('Error in image generation:', error);

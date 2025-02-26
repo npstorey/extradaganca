@@ -60,10 +60,30 @@ const Container = styled.div<{ $theme?: any }>`
   color: ${props => props.theme.textColor};
   background-color: ${props => props.theme.backgroundColor};
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   min-height: 100vh;
+  max-height: 100vh;
   animation: ${fadeIn} 1s ease-in;
   transition: all 0.5s ease;
+  
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: ${props => props.theme.accentColor} ${props => props.theme.backgroundColor};
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${props => Color(props.theme.backgroundColor).darken(0.2).toString()};
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: ${props => props.theme.accentColor};
+    border-radius: 4px;
+    border: 2px solid ${props => props.theme.backgroundColor};
+  }
   
   ${props => props.theme.backgroundPattern !== 'none' && css`
     &::before {
